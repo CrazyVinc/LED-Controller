@@ -124,28 +124,36 @@ app.listen(3000);
 
 const SerialPort = require('serialport');
 const Readline = require('@serialport/parser-readline');
+const Ready = require('@serialport/parser-ready')
+
 const { log } = require('console');
 
-const ArduinoPort = new SerialPort('COM3',{ baudRate : 9600 }  );
+const ArduinoPort = new SerialPort('COM3', {
+  baudRate : 9600,
+  autoOpen: true
+});
 
 
-const parser = new Readline();
-ArduinoPort.pipe(parser);
+const parser = ArduinoPort.pipe(new Readline({ delimiter: '\n' }))
+// // ArduinoPort.pipe(parser);
 
-// read data  
-parser.on('data', console.log);
-
-// write data 
-// setTimeout(function() {
-//     ArduinoPort.write("color sky\n");
-// }, 2000);
-
-
-
+// parser.on('ready', () => console.log('the ready byte sequence has been received'))
+// parser.on('data', console.log);
+ArduinoPort.on('open', () => console.log('yay the port is open!'))
+ArduinoPort.on('error', () => console.log('boo we had an error!'))
 
 
 
-
+function writeAndDrain (data) {
+  return new Promise(function(resolve, reject) { 
+    ArduinoPort.write(data, function () {
+      console.log('message written' + data)
+      parser.on('data', (data) => {
+          resolve(data)
+      })
+    })
+  });
+}
 
 
 
@@ -171,50 +179,31 @@ function makeid(length) {
 
 var CronTimer = "*/5 * * * * * ";
 var LED;
-var DelaySleep = 50;
+var LEDJobTracking = {};
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms || DEF_DELAY));
   }
+  
 connection.query("SELECT * FROM `ledtimes` WHERE `Name` =\"active\" AND `enabled`=\"true\" LIMIT 1", function(err, rows, fields) {
     console.log(rows[0].CronTime);
+    LEDJobTracking = rows[0];
     LED = cron.schedule(rows[0].CronTime, async() => {
         console.log('Running a job at 01:00 at America/Sao_Paulo timezone');
-        
-        ArduinoPort.write("power on\n");
-        console.log(138);
-        await sleep(30);
-        ArduinoPort.write("color red\n");
-        console.log(141);
-        await sleep(DelaySleep);
-        ArduinoPort.write("bright down\n");
-        console.log(144);
-        await sleep(DelaySleep);
-        ArduinoPort.write("bright down\n");
-        console.log(147);
-        await sleep(DelaySleep);
-        ArduinoPort.write("bright down\n");
-        console.log(150);
-        await sleep(DelaySleep);
-        ArduinoPort.write("bright down\n");
-        console.log(153);
-        await sleep(DelaySleep);
-        ArduinoPort.write("bright down\n");
-        console.log(156);
-        await sleep(DelaySleep);
-        ArduinoPort.write("bright down\n");
-        console.log(159);
-        await sleep(DelaySleep);
-        ArduinoPort.write("bright down\n");
-        console.log(162);
-        await sleep(DelaySleep);
-        ArduinoPort.write("bright up\n");
-        console.log(165);
-        
-        await sleep(DelaySleep);
-        ArduinoPort.write("color Sky\n");
-        console.log(169);
-        await sleep(DelaySleep);
+        await writeAndDrain("power on\n");
+        await writeAndDrain("color red\n");
+        await writeAndDrain("bright down\n");
+        await writeAndDrain("bright down\n");
+        await writeAndDrain("bright down\n");
+        await writeAndDrain("bright down\n");
+        await writeAndDrain("bright down\n");
+        await writeAndDrain("bright down\n");
+        await writeAndDrain("bright down\n");
+        await writeAndDrain("bright up\n");
+        await writeAndDrain("color sky\n");
         console.log('ready');
     });
     LED.start();
+    if(err) {
+      console.log(11231, err);
+    }
 })
