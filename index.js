@@ -1,12 +1,24 @@
+var path = require('path');
+const { log } = require('console');
+
 var mysql = require('mysql2');
 var express = require('express');
 var session = require('express-session');
 let ejs = require('ejs');
 var bodyParser = require('body-parser');
+
+const SerialPort = require('serialport');
+const Readline = require('@serialport/parser-readline');
+const Ready = require('@serialport/parser-ready')
+
+
 var cron = require('node-cron');
-var path = require('path');
+var CronJob = require('cron');
+
+
 const { uuid } = require('uuidv4');
 
+const Arduino = require("./src/ArduinoController");
 
 var connection = mysql.createConnection({
 	host     : '192.168.1.253',
@@ -122,87 +134,41 @@ app.listen(3000);
 
 
 
-const SerialPort = require('serialport');
-const Readline = require('@serialport/parser-readline');
-const Ready = require('@serialport/parser-ready')
-
-const { log } = require('console');
-
-const ArduinoPort = new SerialPort('COM3', {
-  baudRate : 9600,
-  autoOpen: true
-});
-
-
-const parser = ArduinoPort.pipe(new Readline({ delimiter: '\n' }))
-// // ArduinoPort.pipe(parser);
-
-// parser.on('ready', () => console.log('the ready byte sequence has been received'))
-// parser.on('data', console.log);
-ArduinoPort.on('open', () => console.log('yay the port is open!'))
-ArduinoPort.on('error', () => console.log('boo we had an error!'))
-
-
-
-function writeAndDrain (data) {
-  return new Promise(function(resolve, reject) { 
-    ArduinoPort.write(data, function () {
-      console.log('message written' + data)
-      parser.on('data', (data) => {
-          resolve(data)
-      })
-    })
-  });
-}
 
 
 
 
 
 
+var LEDWakeUpEvent;
 
 
 
-
-function makeid(length) {
-    var result           = '';
-    var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    var charactersLength = characters.length;
-    for ( var i = 0; i < length; i++ ) {
-      result += characters.charAt(Math.floor(Math.random() * 
- charactersLength));
-   }
-   return result;
-}
-
-
-
-var CronTimer = "*/5 * * * * * ";
-var LED;
+var CronTimer = "*/5 * * * * *";
+var LED = new CronJob.CronJob('* * * * * *', async () => {
+  console.log('Waking Up...');
+  LEDWakeUpEvent = new Date();
+  await Arduino.Write("power on\n");
+  await Arduino.Write("color red\n");
+  await Arduino.Shortcuts("lowest");
+  await Arduino.Write("bright up\n");
+  await Arduino.Write("color sky\n");
+  LEDWakeUpEvent = new Date() - LEDWakeUpEvent;
+  console.log('LEDs completed: ' + LEDWakeUpEvent + 'ms');
+}, null, false);
 var LEDJobTracking = {};
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms || DEF_DELAY));
-  }
-  
+
+
 connection.query("SELECT * FROM `ledtimes` WHERE `Name` =\"active\" AND `enabled`=\"true\" LIMIT 1", function(err, rows, fields) {
-    console.log(rows[0].CronTime);
-    LEDJobTracking = rows[0];
-    LED = cron.schedule(rows[0].CronTime, async() => {
-        console.log('Running a job at 01:00 at America/Sao_Paulo timezone');
-        await writeAndDrain("power on\n");
-        await writeAndDrain("color red\n");
-        await writeAndDrain("bright down\n");
-        await writeAndDrain("bright down\n");
-        await writeAndDrain("bright down\n");
-        await writeAndDrain("bright down\n");
-        await writeAndDrain("bright down\n");
-        await writeAndDrain("bright down\n");
-        await writeAndDrain("bright down\n");
-        await writeAndDrain("bright up\n");
-        await writeAndDrain("color sky\n");
-        console.log('ready');
-    });
-    LED.start();
+    if(rows.length > 0) {
+      console.log(rows[0].CronTime);
+      LEDJobTracking = rows[0];
+      LED.setTime(CronJob.time(rows[0].CronTime));
+      LED.start();
+    } else {
+      console.log("No active LED Timer found!");
+      LED.stop();
+    }
     if(err) {
       console.log(11231, err);
     }
