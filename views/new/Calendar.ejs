@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <%- include("../includes/head.ejs", {Page: "New"}) %>
+  </head>
+  <body>
+    <%- include("../includes/nav.ejs", {}) %>
+    <div class="container">
+        <%- include("./Tabs.ejs", {
+            "Page": "Calendar"
+        }) %>
+      <div class="columns">
+        <div class="column is-four-fifths">
+          <div class="columns">
+            <div class="column">
+              <input type="text" id="TimeSel" hidden/>
+            </div>
+            <div class="column">
+                <input type="text" id="CronSel"/>
+            </div>
+            <div class="column">
+              Fourth column
+            </div>
+          </div>
+          <div class="columns">
+            <div class="column">
+              a
+            </div>
+            <div class="column">
+              sw
+            </div>
+            <div class="column">
+              w
+            </div>
+          </div>
+        </div>
+        <div class="column">
+
+
+          <div class="list">
+            <div class="list-item">
+          
+              <div class="list-item-content">
+                <div class="list-item-title">List item</div>
+                <div class="list-item-description">List item description</div>
+              </div>
+          
+              <div class="list-item-controls">
+                <div class="buttons is-right">
+                  <button class="button">
+                    <span class="icon is-small">
+                      <i class="far fa-calendar-times"></i>
+                    </span>
+                    <span>Delete</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+    flatpickr("#myID", {});
+    flatpickr("#TimeSel", {
+      enableTime: true,
+      enableSeconds: true,
+      inline: true
+    });
+
+    function CheckCron() {
+        var http = new XMLHttpRequest();
+        var url = '/api/VerifyCron';
+        var params = 'CronTime='+document.getElementById("CronSel").value;
+        http.open('POST', url, true);
+
+        //Send the proper header information along with the request
+        http.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+
+        http.onreadystatechange = function() {//Call a function when the state changes.
+            if(http.readyState == 4 && http.status == 200) {
+                alert(http.responseText);
+            }
+        }
+        http.send(params);
+    }
+    </script>
+  </body>
+</html>

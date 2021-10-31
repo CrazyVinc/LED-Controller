@@ -1,1 +1,2 @@
+REM nodemon --ignore *
 nodemon

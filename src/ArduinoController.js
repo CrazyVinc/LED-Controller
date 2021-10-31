@@ -5,7 +5,8 @@ const Ready = require('@serialport/parser-ready')
 
 const ArduinoPort = new SerialPort('COM3', {
     baudRate : 9600,
-    autoOpen: true
+    autoOpen: true,
+
 });
 
 
@@ -21,7 +22,7 @@ ArduinoPort.on('error', () => console.log('boo we had an error!'))
 
 function ArduinoWrite(data) {
     return new Promise(function(resolve, reject) { 
-        ArduinoPort.write(data, function () {
+        ArduinoPort.write(data, function() {
             console.log('message written: ' + data);
             parser.once('data', (data) => {
                 console.log('Response: ' + data);
@@ -34,20 +35,51 @@ function ArduinoWrite(data) {
 async function Shortcuts(Shortcut) {
     Shortcut = Shortcut.toLowerCase();
     if(Shortcut == "lowest") {
-        await ArduinoWrite("bright down\n");
-        await ArduinoWrite("bright down\n");
-        await ArduinoWrite("bright down\n");
-        await ArduinoWrite("bright down\n");
-        await ArduinoWrite("bright down\n");
-        await ArduinoWrite("bright down\n");
+        await ArduinoWrite("bright down");
+        await ArduinoWrite("bright down");
+        await ArduinoWrite("bright down");
+        await ArduinoWrite("bright down");
+        await ArduinoWrite("bright down");
+        await ArduinoWrite("bright down");
+    } else if(Shortcut == "brightest") {
+        await ArduinoWrite("bright up");
+        await ArduinoWrite("bright up");
+        await ArduinoWrite("bright up");
+        await ArduinoWrite("bright up");
+        await ArduinoWrite("bright up");
+        await ArduinoWrite("bright up");
     } else {
         console.log("No Shortcut found!");
+    }
+}
+async function Brightness(level) {
+    var count;
+    if(level <= 3) {
+        count = 1;
+        await Shortcuts("lowest");
+        
+        console.log(level, 5748)
+        while (count <= level) {
+            count++;
+            await ArduinoWrite("bright up");
+            console.log(count);
+        }
+    } else {
+        count = 5;
+        await Shortcuts("brightest");
+        console.log("Level: ", level);
+        while (level <= count) {
+            count = count - 1;
+            await ArduinoWrite("bright down");
+            console.log("Count: ", count);
+        }
     }
 }
 
 module.exports = {
     ArduinoPort,
     parser,
+    Brightness,
     Write: ArduinoWrite,
     Shortcuts,
 }

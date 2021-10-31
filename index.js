@@ -2,6 +2,7 @@ var path = require('path');
 const { log } = require('console');
 
 var mysql = require('mysql2');
+
 var express = require('express');
 var session = require('express-session');
 let ejs = require('ejs');
@@ -11,21 +12,18 @@ const SerialPort = require('serialport');
 const Readline = require('@serialport/parser-readline');
 const Ready = require('@serialport/parser-ready')
 
-
-var cron = require('node-cron');
 var CronJob = require('cron');
-
+var CronVerify = require('cron-validate');
 
 const { uuid } = require('uuidv4');
 
 const Arduino = require("./src/ArduinoController");
+const {connection} = require("./src/Database");
+const CronJobs = require("./src/CronJobs");
+const { verify } = require('crypto');
 
-var connection = mysql.createConnection({
-	host     : '192.168.1.253',
-	user     : 'root',
-	password : 'vlg',
-	database : 'ledcontroller'
-});
+var config = require('./config');
+
 
 var app = express();
 app.set('view engine', 'ejs');
@@ -106,12 +104,27 @@ app.get('/home', auth, function(req, res) {
   res.render('home');
 });
 
-app.get('/new', auth, function(req, res) {
-  res.render('New');
+app.get('/new/DateTime', auth, function(req, res) {
+  res.render('new/DateTime');
 });
 
 app.get('/new/range', auth, function(req, res) {
-  res.render('New');
+  res.render('new/range');
+});
+
+app.get('/new/CronJob', auth, function(req, res) {
+  res.render('new/CronJob');
+});
+app.get('/Settings', auth, function(req, res) {
+  res.render('settings');
+});
+
+app.post('/api/VerifyCron', auth, function(req, res) {
+  var Verify = CronVerify(req.body.CronTime, {
+    preset: 'npm-node-cron',
+  });
+  console.log(Verify);
+  res.send(Verify);
 });
 
 app.get('/api/GetDates', auth, async(req, res) => {
@@ -120,56 +133,14 @@ app.get('/api/GetDates', auth, async(req, res) => {
     res.send(results);
 });
 
+
+app.get('/test', async(req, res) => {
+  Arduino.Brightness(6);
+  res.send("f");
+});
+
+app.get('*', auth, function(req, res){
+  res.redirect("/home");
+});
+
 app.listen(3000);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-var LEDWakeUpEvent;
-
-
-
-var CronTimer = "*/5 * * * * *";
-var LED = new CronJob.CronJob('* * * * * *', async () => {
-  console.log('Waking Up...');
-  LEDWakeUpEvent = new Date();
-  await Arduino.Write("power on\n");
-  await Arduino.Write("color red\n");
-  await Arduino.Shortcuts("lowest");
-  await Arduino.Write("bright up\n");
-  await Arduino.Write("color sky\n");
-  LEDWakeUpEvent = new Date() - LEDWakeUpEvent;
-  console.log('LEDs completed: ' + LEDWakeUpEvent + 'ms');
-}, null, false);
-var LEDJobTracking = {};
-
-
-connection.query("SELECT * FROM `ledtimes` WHERE `Name` =\"active\" AND `enabled`=\"true\" LIMIT 1", function(err, rows, fields) {
-    if(rows.length > 0) {
-      console.log(rows[0].CronTime);
-      LEDJobTracking = rows[0];
-      LED.setTime(CronJob.time(rows[0].CronTime));
-      LED.start();
-    } else {
-      console.log("No active LED Timer found!");
-      LED.stop();
-    }
-    if(err) {
-      console.log(11231, err);
-    }
-})

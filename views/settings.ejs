@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+	<head>
+        <%- include("./includes/head.ejs", {Page: "Settings"}) %>
+	</head>
+	<body>
+        <%- include("includes/nav") %>
+        <div class="container is-fluid">
+            <div class="columns">
+                <div class="column">
+                    a
+                </div>
+                <div class="column">
+                    Second column
+                </div>
+                <div class="column">
+                    Third column
+                </div>
+                <div class="column">
+                    Fourth column
+                </div>
+            </div>
+            <div class="columns">
+                <div class="column">
+                    <input type="text" id="TimeSel"/>
+                </div>
+                <div class="column">
+                sw
+                </div>
+                <div class="column">
+                w
+                </div>
+            </div>
+            <input type="text" id="myID">
+        </div>
+        <script>
+            flatpickr("#myID", {});
+            flatpickr("#TimeSel", {
+                enableTime: true,
+                enableSeconds: true,
+                noCalendar: true
+            });
+            // flatpickr("#myID", {});
+        </script>
+	</body>
+</html>
