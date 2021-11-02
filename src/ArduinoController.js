@@ -21,6 +21,7 @@ ArduinoPort.on('error', () => console.log('boo we had an error!'))
 
 
 function ArduinoWrite(data) {
+    // data = data+"\n";
     return new Promise(function(resolve, reject) { 
         ArduinoPort.write(data, function() {
             console.log('message written: ' + data);

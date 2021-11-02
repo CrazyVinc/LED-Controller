@@ -2,6 +2,83 @@
 <html>
   <head>
     <%- include("../includes/head.ejs", {Page: "New"}) %>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@5.10.0/main.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.0/main.min.js"></script>
+    <script src='https://cdn.jsdelivr.net/npm/moment@2.27.0/min/moment.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/@fullcalendar/moment@5.5.0/main.global.min.js'></script>
+      <!-- jsPanel CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/jspanel4@4.12.0/dist/jspanel.css" rel="stylesheet">
+  <!-- jsPanel JavaScript -->
+  <script src="https://cdn.jsdelivr.net/npm/jspanel4@4.12.0/dist/jspanel.js"></script>
+
+  <!-- optional jsPanel extensions -->
+  <script src="https://cdn.jsdelivr.net/npm/jspanel4@4.12.0/dist/extensions/modal/jspanel.modal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspanel4@4.12.0/dist/extensions/tooltip/jspanel.tooltip.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspanel4@4.12.0/dist/extensions/hint/jspanel.hint.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspanel4@4.12.0/dist/extensions/layout/jspanel.layout.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspanel4@4.12.0/dist/extensions/contextmenu/jspanel.contextmenu.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspanel4@4.12.0/dist/extensions/dock/jspanel.dock.js"></script>
+
+
+    <script>
+      function JSPanel(URL, Name, Data) {
+        jsPanel.ajax({
+          method: "POST",
+          url: URL,
+          data: JSON.stringify(Data),
+          done: (xhr) => {
+            jsPanel.create({
+              headerTitle: Name,
+              content: xhr.responseText,
+              panelSize: '700 auto'
+            });
+          },
+          beforeSend: function() {
+              this.setRequestHeader('Content-Type', 'application/json');
+          }
+        });
+      }
+      document.addEventListener('DOMContentLoaded', function() {
+        var calendarEl = document.getElementById('calendar');
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+          initialView: 'dayGridMonth',
+          eventTimeFormat: {
+            hour: '2-digit',
+            minute: '2-digit',
+            meridiem: false,
+            hour12: false,
+          },
+          eventDisplay: 'block',
+          eventClick: function(info) {
+            info.jsEvent.preventDefault(); // don't let the browser navigate
+
+            if (info.event.url) {
+              JSPanel(info.event.url, info.event.title, info.event);
+              console.log(info);
+            }
+          },
+          events: [
+            <% LEDS.forEach(LED => {
+              var i = 0;
+            if(LED.type == "cron") {
+              Cron.time(LED.CronTime).sendAt(10).forEach(Time => { i++;
+              %>{
+              title: "CronID: <%- LED.Name %>",
+              start: new Date(<%- Time %>),
+              url: "/modal/Calendar/<%- LED.ID %>",
+              extendedProps: {
+                Time: <%- moment(Time).unix() %>,
+                Count: <%- i %>
+              }
+            },<%
+            });
+            };
+            }); %>
+          ]
+        });
+        calendar.render();
+      });
+    </script>
   </head>
   <body>
     <%- include("../includes/nav.ejs", {}) %>
@@ -11,32 +88,9 @@
         }) %>
       <div class="columns">
         <div class="column is-four-fifths">
-          <div class="columns">
-            <div class="column">
-              <input type="text" id="TimeSel" hidden/>
-            </div>
-            <div class="column">
-                <input type="text" id="CronSel"/>
-            </div>
-            <div class="column">
-              Fourth column
-            </div>
-          </div>
-          <div class="columns">
-            <div class="column">
-              a
-            </div>
-            <div class="column">
-              sw
-            </div>
-            <div class="column">
-              w
-            </div>
-          </div>
+            <div id='calendar'></div>
         </div>
         <div class="column">
-
-
           <div class="list">
             <div class="list-item">
           
@@ -61,13 +115,6 @@
       </div>
     </div>
     <script>
-    flatpickr("#myID", {});
-    flatpickr("#TimeSel", {
-      enableTime: true,
-      enableSeconds: true,
-      inline: true
-    });
-
     function CheckCron() {
         var http = new XMLHttpRequest();
         var url = '/api/VerifyCron';
@@ -83,6 +130,21 @@
             }
         }
         http.send(params);
+    }
+    function BlockTime(ID, Data) {
+        var http = new XMLHttpRequest();
+        var url = '/api/blocktime/'+ID;
+        http.open('POST', url, true);
+
+        //Send the proper header information along with the request
+        http.setRequestHeader('Content-type', 'application/json');
+
+        http.onreadystatechange = function() {//Call a function when the state changes.
+            if(http.readyState == 4 && http.status == 200) {
+                alert(http.responseText);
+            }
+        }
+        http.send(JSON.stringify(Data));
     }
     </script>
   </body>

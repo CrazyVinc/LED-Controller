@@ -8,10 +8,19 @@
         <div class="container is-fluid">
             <div class="columns">
                 <div class="column">
-                    a
+                    <div style="padding-right: initial;" class="button is-static">
+                        <span class="icon is-small">
+                            <i class="fa-solid fa-power-off"></i>
+                        </span>
+                        <div class="buttons has-addons">
+                            <button class="button is-success">On</button>
+                            <button class="button is-danger">Off</button>
+                        </div>
+                    </div>
                 </div>
                 <div class="column">
-                    Second column
+                    <button class="button"></button>
+                    <button class="button is-info">Normal</button>
                 </div>
                 <div class="column">
                     Third column
@@ -31,16 +40,24 @@
                 w
                 </div>
             </div>
-            <input type="text" id="myID">
         </div>
         <script>
-            flatpickr("#myID", {});
-            flatpickr("#TimeSel", {
-                enableTime: true,
-                enableSeconds: true,
-                noCalendar: true
-            });
-            // flatpickr("#myID", {});
-        </script>
+            function LedAction() {
+                var http = new XMLHttpRequest();
+                var url = '/api/SendLedCommand';
+                var params = 'CronTime='+document.getElementById("CronSel").value;
+                http.open('POST', url, true);
+        
+                //Send the proper header information along with the request
+                http.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+        
+                http.onreadystatechange = function() {//Call a function when the state changes.
+                    if(http.readyState == 4 && http.status == 200) {
+                        alert(http.responseText);
+                    }
+                }
+                http.send(params);
+            }
+            </script>
 	</body>
 </html>

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <div class="container">
+      <div class="columns">
+        <div class="column is-four-fifths">
+          <button class="button">Normal</button>
+          <button class="button is-primary">Normal</button>
+          <button class="button is-link">Normal</button>
+          <button class="button is-info">Normal</button>
+          <button onclick="BlockTime(<%- req.params.ID %>, <%= JSON.stringify(req.body) %>)" class="button is-warning">Block this run</button>
+          <button class="button is-danger">Delete CronJob</button>
+        </div>
+        <div class="column">
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
