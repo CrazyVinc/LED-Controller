@@ -195,7 +195,7 @@ var LED2Cron = new CronJob.CronJob('0 * * * * *', async () => {
     });
     
     const [results, fields] = await connection.promise().query(
-        'SELECT * FROM ledtimes WHERE enabled=\"true\"');
+        'SELECT * FROM ledtimes WHERE enabled=\"true\" AND Name NOT in ("active")');
 
     LEDCrons["jobs"]["new"] = [];
     asyncForEach(results, async (row) => {
@@ -211,10 +211,13 @@ var LED2Cron = new CronJob.CronJob('0 * * * * *', async () => {
                 console.log(`Running Job for ${row.Name}...`);
                 TMP["LED2Cron"][row.ID].RunTime = new Date();
                 
-                await Arduino.Write("power on");
-                await Arduino.Brightness(row.Brightness);
-                await Arduino.Write("color "+row.Color);
-
+                if(row.Color == "off") {
+                    await Arduino.Write("power off");
+                } else {
+                    await Arduino.Write("power on");
+                    await Arduino.Brightness(row.Brightness);
+                    await Arduino.Write("color "+row.Color);
+                }
                 TMP["LED2Cron"][row.ID].RunTime = new Date() - TMP["LED2Cron"][row.ID].RunTime
                 console.log('Event22 completed: ' + TMP["LED2Cron"][row.ID].RunTime + 'ms');
             }, null, true, null, null, false);
@@ -232,7 +235,6 @@ var LED2Cron = new CronJob.CronJob('0 * * * * *', async () => {
     if(TMP["init"]) {
         asyncForEach(Object.keys(LEDCrons["Job"]), async (row) => {
             if(!LEDCrons["jobs"]["new"].includes(parseInt(row))) {
-                console.log(128462, row);
                 LEDCrons["Job"][row].stop();
                 delete LEDCrons["Job"][row];
                 delete LEDCrons["jobs"]["new"][row];
@@ -241,18 +243,6 @@ var LED2Cron = new CronJob.CronJob('0 * * * * *', async () => {
     } else {
         TMP["init"] = true;
     }
-    // const [results, fields] = await connection.promise().query(
-    //     'SELECT * FROM blockedruns WHERE Time=? limit 1', [moment().unix().toString().slice(0, -1)]);
-    // if(results.length > 0) {
-    //     console.log("LED Job is blocked, Deleting MySQL Row...");
-    //     await connection.promise().query(
-    //         'DELETE FROM `blockedruns` WHERE `ID`=?;', [results[0].ID]);
-        
-    //     LEDWakeUpEvent = new Date() - LEDWakeUpEvent;
-    //     console.log('LED Job quit forced: %dms', LEDWakeUpEvent);
-    //     return;
-    // }
-
     // await Arduino.Write("power on");
     // if(LedTMP.WakeUP.TMPColor !== null) {
     //     await Arduino.Write("color "+LedTMP.WakeUP.TMPColor);
@@ -278,14 +268,7 @@ var LED2Cron = new CronJob.CronJob('0 * * * * *', async () => {
     //         LED.stop();
     //     }
     // })
-    // asyncForEach(LEDCrons["jobs"]["del"], async (JobL) => {
-        // if(LEDCrons["jobs"]["new"].indexOf(row.ID) === -1) {
-        //     LEDCrons["jobs"]["new"].push(row.ID);
-        //     console.log(LEDCrons["jobs"]);
-        // // }
-        // console.log(JobL, 5);
-    // });
-    console.log(-385483, Object.keys(LEDCrons["Job"]), LEDCrons["jobs"]);
+    
     TMP["LED2Cron"].RunTime = new Date() - TMP["LED2Cron"].RunTime;
     console.log('LED Commands Lookup completed in: ' + TMP["LED2Cron"].RunTime + 'ms');
 }, null, true, null, null, true);
