@@ -15,7 +15,9 @@ const { randomUUID, randomInt } = require('crypto');
 const { asyncForEach }  = require("./utils");
 
 
-var TMP = {}
+var TMP = {
+    "init": false,
+}
 var LEDWakeUpEvent;
 var LedTMP = {};
 
@@ -180,7 +182,8 @@ var EventReload = new CronJob.CronJob('*/30 * * * * *', async () => {
 var LEDCrons = {
     "Job": {},
     "jobs": {
-        new: []
+        "new": [],
+        "new2": []
     }
 };
 var LED2Cron = new CronJob.CronJob('0 * * * * *', async () => {
@@ -194,6 +197,7 @@ var LED2Cron = new CronJob.CronJob('0 * * * * *', async () => {
     const [results, fields] = await connection.promise().query(
         'SELECT * FROM ledtimes WHERE enabled=\"true\"');
 
+    LEDCrons["jobs"]["new"] = [];
     asyncForEach(results, async (row) => {
         TMP = merge(TMP, {
             "LED2Cron": {
@@ -215,7 +219,6 @@ var LED2Cron = new CronJob.CronJob('0 * * * * *', async () => {
                 console.log('Event22 completed: ' + TMP["LED2Cron"][row.ID].RunTime + 'ms');
             }, null, true, null, null, false);
         }
-        LEDCrons["jobs"]["new"] = [];
         if(row.type == "cron") {
             LEDCrons["Job"][row.ID].setTime(new CronJob.CronTime(row.CronTime));
             LEDCrons["Job"][row.ID].start();
@@ -225,6 +228,19 @@ var LED2Cron = new CronJob.CronJob('0 * * * * *', async () => {
             }
         }
     });
+
+    if(TMP["init"]) {
+        asyncForEach(Object.keys(LEDCrons["Job"]), async (row) => {
+            if(!LEDCrons["jobs"]["new"].includes(parseInt(row))) {
+                console.log(128462, row);
+                LEDCrons["Job"][row].stop();
+                delete LEDCrons["Job"][row];
+                delete LEDCrons["jobs"]["new"][row];
+            }
+        });
+    } else {
+        TMP["init"] = true;
+    }
     // const [results, fields] = await connection.promise().query(
     //     'SELECT * FROM blockedruns WHERE Time=? limit 1', [moment().unix().toString().slice(0, -1)]);
     // if(results.length > 0) {
