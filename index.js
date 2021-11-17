@@ -137,6 +137,11 @@ app.post('/modal/Calendar/:ID', auth, async(req, res) => {
   }
 });
 
+app.post('/modal/NewEvent', auth, async(req, res) => {
+  console.log(req.body);
+  res.render('modal/NewEvent', {Cron: CronJob, moment: moment, req: req});
+});
+
 app.use('/api', auth, require("./routes/api"));
 
 app.get('/test', async(req, res) => {

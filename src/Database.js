@@ -38,7 +38,6 @@ var connection = mysql.createPool({
     waitForConnections: true,
 	database : 'ledcontroller',
 	queueLimit: 0,
-    acquireTimeout: 30000,
 });
 
 module.exports = {

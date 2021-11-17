@@ -3,7 +3,7 @@ const Readline = require('@serialport/parser-readline');
 const Ready = require('@serialport/parser-ready')
 
 
-const ArduinoPort = new SerialPort('COM3', {
+const ArduinoPort = new SerialPort('COM4', {
     baudRate : 9600,
     autoOpen: true,
 
@@ -21,7 +21,6 @@ ArduinoPort.on('error', () => console.log('boo we had an error!'))
 
 
 function ArduinoWrite(data) {
-    // data = data+"\n";
     return new Promise(function(resolve, reject) { 
         ArduinoPort.write(data, function() {
             console.log('message written: ' + data);

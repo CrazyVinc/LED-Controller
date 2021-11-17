@@ -35,9 +35,10 @@ app.get('/CronJob', function(req, res) {
 });
 
 app.get('/Calendar', async(req, res) => {
+    const [BlockedRuns] = await connection.promise().query('SELECT * FROM blockedruns');
     const [results, fields] = await connection.promise().query(
         'SELECT * FROM ledtimes WHERE `enabled`=\"true\"');
-    res.render('new/Calendar', {"LEDS": results, Cron: CronJob, moment: moment});
+    res.render('new/Calendar', {"LEDS": results, "BlockedRuns": BlockedRuns, Cron: CronJob, moment: moment});
 });
   
   

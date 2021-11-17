@@ -16,7 +16,6 @@ const UUID = require('uuidv4');
 const Arduino = require("../src/ArduinoController");
 const {connection} = require("../src/Database");
 const CronJobs = require("../src/CronJobs");
-const { verify, randomUUID } = require('crypto');
 
 var config = require('../config');
 
@@ -42,24 +41,74 @@ app.post('/VerifyCron', function(req, res) {
     if(req.params.ID) {
         console.log(-484, req.body);
         const [results, fields] = await connection.promise().query(
-            'INSERT INTO `ledcontroller`.`blockedruns` (`JobID`, `Time`) VALUES (?, ?);', [1, (req.body.extendedProps.Time).toString().slice(0, -1)]);
+            'INSERT INTO `ledcontroller`.`blockedruns` (`JobID`, `Time`) VALUES (?, ?);', [req.params.ID, (req.body.extendedProps.Time).toString().slice(0, -1)]);
             res.send("a")
         console.log(req.body);
     } else {
         res.send("?");
     }
   });
-  
-  app.get('/GetDates', async(req, res) => {
-    const [results, fields] = await connection.promise().query(
-      'SELECT * FROM ledtimes');
-      if(LED.type == "cron") {
-         Cron.time(LED.CronTime).sendAt(10).forEach(Time => {
-            console.log(Time);
-         });
-      };
-      res.send(results);
+
+  app.post('/Unblocktime/:ID', async (req, res) => {
+    if(req.params.ID) {
+        console.log(-484, req.body);
+        const [results, fields] = await connection.promise().query(
+            'DELETE FROM `ledcontroller`.`blockedruns` WHERE ID=? AND JobID=?;', [req.body.extendedProps.BlockedID, req.params.ID]);
+        res.send("a");
+        console.log(req.body);
+    } else {
+        res.send("?");
+    }
   });
   
+app.get('/GetDates', async(req, res) => {
+  const [results, fields] = await connection.promise().query(
+    'SELECT * FROM ledtimes');
+    if(LED.type == "cron") {
+       Cron.time(LED.CronTime).sendAt(10).forEach(Time => {
+          console.log(Time);
+       });
+    };
+    res.send(results);
+});
+
+app.get('/GetFeed', async(req, res) => {
+  const [BlockedRuns] = await connection.promise().query('SELECT * FROM blockedruns');
+  const [LEDS, fields] = await connection.promise().query(
+      'SELECT * FROM ledtimes WHERE `enabled`=\"true\"');
+
+  var Response = [];
+  LEDS.forEach(LED => {
+    var i = 0;
+    if(LED.type == "cron") {
+      CronJob.time(LED.CronTime).sendAt(10).forEach(Time => { i++;
+        var blockedState = {State: false, ID: -1};
+        
+        BlockedRuns.forEach(Blocked => {
+          if(Blocked.Time == moment(Time).unix().toString().slice(0, -1)) {
+            blockedState.State = true;
+            blockedState.ID = Blocked.ID;
+          }
+        });
+        var obj = {
+          title: "CronID: "+LED.Name,
+          start: Time,
+          url: "/modal/Calendar/"+LED.ID,
+          extendedProps: {
+            ID: LED.ID,
+            Time: moment(Time).unix(),
+            Count: i,
+            blocked: blockedState.State,
+            BlockedID: blockedState.ID,
+          }
+        }
+        if(blockedState.State) obj["backgroundColor"] = "red";
+        Response.push(obj);
+      });
+    };
+  });
+  res.send(Response);
+});
+
   
-module.exports = app    ;
+module.exports = app;
