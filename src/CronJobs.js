@@ -125,7 +125,7 @@ var EventReload = new CronJob.CronJob('*/30 * * * * *', async () => {
                         }
                     },
                 });
-                Events2[Event[0]] = new CronJob.CronJob('0 0 0 */35 * *', async () => {
+                Events2[Event[0]] = new CronJob.CronJob('0 0 0 1 1 1', async () => {
                     console.log(`Recheck Event for ${Event[0]}...`);
                     TMP["RunTimeCalc"][Event[0]]["RunTime"] = new Date();
                     if(Event[1].criteria.type == "Web API") {
@@ -145,7 +145,7 @@ var EventReload = new CronJob.CronJob('*/30 * * * * *', async () => {
                 }, null, false, null, null, true);
 
 
-                Events[Event[0]] = new CronJob.CronJob('0 0 0 * * *', async () => {
+                Events[Event[0]] = new CronJob.CronJob('0 0 18 1 1 1', async () => {
                     console.log(`Running Event for ${Event[0]}...`);
                     LEDWakeUpEvent = new Date();
                     if(Event[1].criteria.type == "Web API") {
@@ -156,7 +156,7 @@ var EventReload = new CronJob.CronJob('*/30 * * * * *', async () => {
                         Events2[Event[0]].setTime(new CronJob.CronTime(Recheck));
                         
                         if(JobsInit[Event[0]].init) {
-                            console.log("SunSet", 472);
+                            console.log("SunSet", -472);
                             await Arduino.Write("power on");
                             await Arduino.Brightness(Event[1].Brightness);
                             await Arduino.Write("color "+Event[1].Color);

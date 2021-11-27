@@ -29,12 +29,16 @@ app.post('/VerifyCron', function(req, res) {
     res.send(Verify);
   });
   
-  app.post('/SendLedCommand', function(req, res) {
-    var Verify = CronVerify(req.body.CronTime, {
-      preset: 'npm-node-cron',
-    });
-    console.log(Verify);
-    res.send(Verify);
+  app.post('/SendLedCommand', async (req, res) => {
+    console.log(req.body);
+    if(req.body.shortcut) {
+      if((req.body.shortcut).startsWith("Brightness")) {
+        await Arduino.Brightness((req.body.shortcut).split('|')[1])
+      }
+    } else {
+      await Arduino.Write(req.body.action);
+    }
+    res.send(req.body);
   });
 
   app.post('/blocktime/:ID', async (req, res) => {

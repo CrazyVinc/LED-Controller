@@ -5,6 +5,7 @@ var mysql = require('mysql2');
 
 var express = require('express');
 var session = require('express-session');
+var MySQLStore = require('express-mysql-session')(session);
 let ejs = require('ejs');
 var bodyParser = require('body-parser');
 var moment = require('moment');
@@ -26,12 +27,16 @@ const { verify, randomUUID } = require('crypto');
 var config = require('./config');
 
 
+var sessionStore = new MySQLStore({}, connection.promise());
+
 var app = express();
 app.set('view engine', 'ejs');
 app.use(session({
 	secret: 'secret',
 	resave: true,
-	saveUninitialized: true
+	store: sessionStore,
+  saveUninitialized: true,
+  cookie: { maxAge: 3600000 }
 }));
 app.use(bodyParser.urlencoded({extended : true}));
 app.use(bodyParser.json());
@@ -112,7 +117,7 @@ app.post('/auth', function(request, response) {
 });
 
 app.get('/home', auth, function(req, res) {
-  res.render('home');
+  res.render('control');
 });
 
 app.use('/new', auth, require("./routes/new"));
