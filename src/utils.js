@@ -1,3 +1,5 @@
+require('console-stamp')(console, '[HH:MM:ss.l]');
+
 function RandomString(length) {
     var result           = '';
     var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';

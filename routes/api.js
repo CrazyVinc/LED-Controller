@@ -3,6 +3,7 @@ var session = require('express-session');
 let ejs = require('ejs');
 var bodyParser = require('body-parser');
 var moment = require('moment');
+var expressWs = require('express-ws');
 
 const SerialPort = require('serialport');
 const Readline = require('@serialport/parser-readline');
@@ -28,18 +29,33 @@ app.post('/VerifyCron', function(req, res) {
     console.log(Verify);
     res.send(Verify);
   });
-  
-  app.post('/SendLedCommand', async (req, res) => {
-    console.log(req.body);
-    if(req.body.shortcut) {
-      if((req.body.shortcut).startsWith("Brightness")) {
-        await Arduino.Brightness((req.body.shortcut).split('|')[1])
+
+app.post('/SendLedCommand', async (req, res) => {
+  console.log(req.body);
+  if(req.body.shortcut) {
+    if((req.body.shortcut).startsWith("Brightness")) {
+      await Arduino.Brightness((req.body.shortcut).split('|')[1])
+    }
+  } else {
+    await Arduino.Write(req.body.action);
+  }
+  res.send(req.body);
+});
+
+app.ws('/SendLedCommand', async (ws, req) => {
+  ws.on('message', async (msg) => {
+    if(msg == "__ping__") return;
+    msg = JSON.parse(msg);
+    console.log(msg, 383);
+    if(msg.shortcut) {
+      if((msg.shortcut).startsWith("Brightness")) {
+        await Arduino.Brightness((msg.shortcut).split('|')[1])
       }
     } else {
-      await Arduino.Write(req.body.action);
+      await Arduino.Write(msg.action);
     }
-    res.send(req.body);
   });
+});
 
   app.post('/blocktime/:ID', async (req, res) => {
     if(req.params.ID) {

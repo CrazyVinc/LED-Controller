@@ -1,6 +1,12 @@
+require('console-stamp')(console, '[HH:MM:ss.l]');
+var fs = require('fs');
+// var expressWs = require('express-ws');
+
+// var api = require('../routes/api');
+
 const SerialPort = require('serialport');
 const Readline = require('@serialport/parser-readline');
-const Ready = require('@serialport/parser-ready')
+const Ready = require('@serialport/parser-ready');
 const PromiseQueue = require("easy-promise-queue").default;
 let pq = new PromiseQueue({concurrency: 1});
 
@@ -8,9 +14,7 @@ let pq = new PromiseQueue({concurrency: 1});
 const ArduinoPort = new SerialPort('COM4', {
     baudRate : 9600,
     autoOpen: true,
-
 });
-
 
 const parser = ArduinoPort.pipe(new Readline({ delimiter: '\n' }))
 parser.setMaxListeners(5);
@@ -21,24 +25,20 @@ parser.setMaxListeners(5);
 ArduinoPort.on('open', () => console.log('yay the port is open!'))
 ArduinoPort.on('error', () => console.log('boo we had an error!'))
 
-
-// pq.add(() => {
-//     return new Promise(function (resolve, reject) {
-//       setTimeout(function () {
-//         console.log('task 1');
-//         resolve();
-//       }, 1000)
-//     });
-//   });
-  
-  
 function ArduinoWrite(data) {
     pq.add(() => {
         return new Promise(function(resolve, reject) {
             ArduinoPort.write(data, function() {
-                console.log('message written: ' + data);
+                console.log('IR written: ' + data);
                 parser.once('data', (data) => {
-                    console.log('Response: ' + data);
+                    // console.log(global.expressWs.getWss().clients);
+                    console.log('IR Response: ' + data);
+                    if(data.startsWith("Command Error: ")) {
+                        fs.appendFile('errors.txt', data+'\n', function (err) {
+                            if (err) throw err;
+                            console.log('Updated!');
+                          });
+                    }
                     resolve(data);
                 });
             });
@@ -55,7 +55,11 @@ async function Shortcuts(Shortcut) {
         await ArduinoWrite("bright down");
         await ArduinoWrite("bright down");
         await ArduinoWrite("bright down");
+        await ArduinoWrite("bright down");
+        await ArduinoWrite("bright down");
     } else if(Shortcut == "brightest") {
+        await ArduinoWrite("bright up");
+        await ArduinoWrite("bright up");
         await ArduinoWrite("bright up");
         await ArduinoWrite("bright up");
         await ArduinoWrite("bright up");

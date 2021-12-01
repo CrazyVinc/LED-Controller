@@ -3,3 +3,5 @@ node_modules
 .env* 
 *.local
 .vscode
+package-lock.json
+errors.txt

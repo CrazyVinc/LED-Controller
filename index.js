@@ -1,6 +1,8 @@
 var path = require('path');
 const { log } = require('console');
 
+require('console-stamp')(console, '[HH:MM:ss.l]');
+
 var mysql = require('mysql2');
 
 var express = require('express');
@@ -8,6 +10,7 @@ var session = require('express-session');
 var MySQLStore = require('express-mysql-session')(session);
 let ejs = require('ejs');
 var bodyParser = require('body-parser');
+
 var moment = require('moment');
 
 const SerialPort = require('serialport');
@@ -30,6 +33,7 @@ var config = require('./config');
 var sessionStore = new MySQLStore({}, connection.promise());
 
 var app = express();
+var expressWs = require('express-ws')(app);
 app.set('view engine', 'ejs');
 app.use(session({
 	secret: 'secret',
@@ -116,8 +120,8 @@ app.post('/auth', function(request, response) {
 	}
 });
 
-app.get('/home', auth, function(req, res) {
-  res.render('control');
+app.get('/home', auth, async (req, res) => {
+  res.render('control')
 });
 
 app.use('/new', auth, require("./routes/new"));

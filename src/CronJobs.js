@@ -1,6 +1,8 @@
 
 var path = require('path');
 
+require('console-stamp')(console, '[HH:MM:ss.l]');
+
 var mysql = require('mysql2');
 var CronJob = require('cron');
 var moment = require('moment');

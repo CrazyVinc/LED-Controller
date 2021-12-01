@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^0.21.1",
+    "console-stamp": "^3.0.3",
     "cron": "^1.8.2",
     "cron-validate": "^1.4.3",
     "deepmerge": "^4.2.2",
@@ -25,6 +26,7 @@
     "node-cron": "^3.0.0",
     "random": "^3.0.6",
     "serialport": "^9.2.4",
-    "uuidv4": "^6.2.12"
+    "uuidv4": "^6.2.12",
+    "ws": "^8.3.0"
   }
 }

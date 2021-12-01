@@ -1,6 +1,8 @@
 var path = require('path');
 const { log } = require('console');
 
+require('console-stamp')(console, '[HH:MM:ss.l]');
+
 var mysql = require('mysql2');
 
 var express = require('express');
