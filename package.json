@@ -25,7 +25,9 @@
     "mysql2": "^2.3.0",
     "node-cron": "^3.0.0",
     "random": "^3.0.6",
+    "rgb-color": "^2.1.2",
     "serialport": "^9.2.4",
+    "socket.io": "^4.4.0",
     "uuidv4": "^6.2.12",
     "ws": "^8.3.0"
   }

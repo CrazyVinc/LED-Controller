@@ -1,3 +1,4 @@
+const http = require('http');
 var path = require('path');
 const { log } = require('console');
 
@@ -26,14 +27,19 @@ const Arduino = require("./src/ArduinoController");
 const {connection} = require("./src/Database");
 const CronJobs = require("./src/CronJobs");
 const { verify, randomUUID } = require('crypto');
+const { socketConnection } = require('./src/SocketIO');
 
 var config = require('./config');
 
 
 var sessionStore = new MySQLStore({}, connection.promise());
 
-var app = express();
-var expressWs = require('express-ws')(app);
+const app = express();
+
+const server = http.createServer(app);
+socketConnection(server);
+
+
 app.set('view engine', 'ejs');
 app.use(session({
 	secret: 'secret',
@@ -80,11 +86,9 @@ var auth = async (req, res, next) => {
         return next();
       }
     } else {
-      console.log(893);
       return res.redirect('/');
     }
   } else {
-    console.log(452);
     return res.redirect('/');
   }
 };
@@ -154,13 +158,12 @@ app.post('/modal/NewEvent', auth, async(req, res) => {
 app.use('/api', auth, require("./routes/api"));
 
 app.get('/test', async(req, res) => {
-  Arduino.Brightness(6);
   res.send("f");
 });
 
 app.get('*', auth, function(req, res){
+  res.status(404).render('errors', {error: {code: "404"}});
   // res.redirect("/home");
-  res.send("404")
 });
 
-app.listen(3000);
+server.listen(3000);

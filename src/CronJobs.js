@@ -54,8 +54,7 @@ var LED = new CronJob.CronJob('0 0 0 * * *', async () => {
         'SELECT * FROM blockedruns WHERE Time=? limit 1', [moment().unix().toString().slice(0, -1)]);
     if(results.length > 0) {
         console.log("LED Job is blocked, Deleting MySQL Row...");
-        await connection.promise().query(
-            'DELETE FROM `blockedruns` WHERE `ID`=?;', [results[0].ID]);
+        await connection.promise().query('DELETE FROM `blockedruns` WHERE `ID`=?;', [results[0].ID]);
         
         LEDWakeUpEvent = new Date() - LEDWakeUpEvent;
         console.log('LED Job quit forced: %dms', LEDWakeUpEvent);
@@ -64,6 +63,7 @@ var LED = new CronJob.CronJob('0 0 0 * * *', async () => {
 
     await Arduino.Write("power on");
     if(LedTMP.WakeUP.TMPColor !== null) {
+        console.log(384);
         await Arduino.Write("color "+LedTMP.WakeUP.TMPColor);
     }
     await Arduino.Brightness(LedTMP.WakeUP.Brightness);
@@ -132,13 +132,13 @@ var EventReload = new CronJob.CronJob('*/30 * * * * *', async () => {
                     TMP["RunTimeCalc"][Event[0]]["RunTime"] = new Date();
                     if(Event[1].criteria.type == "Web API") {
                         var response = await axios.get(Event[1].criteria.API.URL);
-                        var time = response.data.results.sunset;
+                        var time = moment.utc(response.data.results.sunset).local();
 
                         if(moment(time).isAfter(moment())) {
                             Events[Event[0]].setTime(new CronJob.CronTime(moment(time)));
-                            console.log("Coming", 42);
+                            console.log("Coming", moment(time).format("dddd, MMMM Do YYYY, HH:mm:ss"));
                         } else {
-                            console.log("Past", 423);
+                            console.log("Past", moment(time).format("dddd, MMMM Do YYYY, HH:mm:ss"));
                         }
                     }
                     TMP["RunTimeCalc"][Event[0]]["RunTime"] = new Date() - TMP["RunTimeCalc"][Event[0]]["RunTime"];
@@ -159,6 +159,8 @@ var EventReload = new CronJob.CronJob('*/30 * * * * *', async () => {
                         
                         if(JobsInit[Event[0]].init) {
                             console.log("SunSet", -472);
+                            await Arduino.Write("power on");
+                            await Arduino.Write("rgb 175");
                             await Arduino.Write("power on");
                             await Arduino.Brightness(Event[1].Brightness);
                             await Arduino.Write("color "+Event[1].Color);
@@ -194,6 +196,7 @@ var LEDCrons = {
         "new2": []
     }
 };
+// MySQL Jobs
 var LED2Cron = new CronJob.CronJob('0 */5 * * * *', async () => {
     console.log('Starting LED Commands refreshing...');
     TMP = merge(TMP, {
@@ -226,6 +229,23 @@ var LED2Cron = new CronJob.CronJob('0 */5 * * * *', async () => {
                     await Arduino.Brightness(row.Brightness);
                     await Arduino.Write("color "+row.Color);
                 }
+
+                if(row.Arduino !== undefined) {
+                    if(new RegExp("\(\d*\)").test(row.Arduino)) {
+                        asyncForEach((row.Arduino).split('\\n'), async (row2) => {
+                            if(new RegExp("sleep\(\d*\)").test(row2)) {
+                                setTimeout(()=> {}, row2.match(/\d*/g).join(''));
+                            } else if(new RegExp("bright\(\d*\)").test(row2)) {
+                               await Arduino.Brightness(row2.match(/\d*/g).join(''));
+                            } else {
+                               await Arduino.Write(row2);
+                            }
+                        });
+                    } else {
+                        await Arduino.Write(row.Arduino);
+                    }
+                }
+
                 TMP["LED2Cron"][row.ID].RunTime = new Date() - TMP["LED2Cron"][row.ID].RunTime
                 console.log('CronJob %s completed: %dms', row.Name, TMP["LED2Cron"][row.ID].RunTime);
             }, null, true, null, null, false);

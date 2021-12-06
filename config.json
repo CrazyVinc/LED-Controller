@@ -9,7 +9,7 @@
     "SunSet": {
       "enabled": true,
       "Color": "white",
-      "Brightness": 4,
+      "Brightness": 6,
       "criteria": {
         "type": "Web API",
         "API": {

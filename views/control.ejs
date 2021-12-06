@@ -5,8 +5,18 @@
         <link rel="stylesheet" href="assets/css/bulma-slider.min.css">
         <script src="/assets/FontAwesome.Pro.6.0.0.Beta1/web/js/all.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
-      
-        <script type = "text/javascript">
+        <script src="/socket.io/socket.io.js"></script>
+        <script>
+          const socket = io();
+            socket.on("connect", () => {
+                console.log(socket.id); // x8WIv7-mJelg7on_ALbx
+            });
+
+            socket.on("hello", data => {
+                console.log("Message: " + data);
+            });
+        </script>
+        <!-- <script type = "text/javascript">
         const ws = new WebSocket('wss://led.vlgnl.ga/api/SendLedCommand')
             ws.onopen = () => {
               console.log('ws opened on browser')
@@ -36,7 +46,7 @@
                     return;
                 }
             }
-        </script>
+        </script> -->
 	</head>
 	<body>
         <%- include("includes/nav") %>
@@ -106,44 +116,68 @@
         </div>
         <script>
             var colorPicker = new iro.ColorPicker('#picker', {
-                wheelLightness: true,
-                layoutDirection: "horizontal",
+                // wheelLightness: true,
+                layout: [{
+                    component: iro.ui.Wheel,
+                },{
+                    component: iro.ui.Slider,
+                    options: {
+                        sliderType: 'red',
+                    }
+                },{
+                    component: iro.ui.Slider,
+                    options: {
+                        sliderType: 'green',
+                    }
+                },{
+                    component: iro.ui.Slider,
+                    options: {
+                        sliderType: 'blue',
+                    }
+                },{
+                    component: iro.ui.Slider,
+                    options: {
+                        sliderType: 'value',
+                    }
+                }],
+                // layoutDirection: "horizontal",
             });
             colorPicker.on('color:change', SetRGB);
 
             function SetRGB(action) {
-                ws.send(JSON.stringify({
+                console.log(action);
+                socket.emit("action", JSON.stringify({
                     action: 'rgb '+action.rgb.r+','+action.rgb.g+','+action.rgb.b,
                     shortcut: false
                 }));
-                // console.log(action.rgb.r);
-                // var http = new XMLHttpRequest();
-                // var url = '/api/SendLedCommand';
-                // var params = 'action=rgb '+action.rgb.r+','+action.rgb.g+','+action.rgb.b;
-                // http.open('POST', url, true);
+                /*
+                var http = new XMLHttpRequest();
+                var url = '/api/SendLedCommand';
+                var params = 'action=rgb '+action.rgb.r+','+action.rgb.g+','+action.rgb.b;
+                http.open('POST', url, true);
         
-                // //Send the proper header information along with the request
-                // http.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+                //Send the proper header information along with the request
+                http.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
         
-                // http.onreadystatechange = function() {//Call a function when the state changes.
-                //     if(http.readyState == 4 && http.status == 200) {
-                //         // alert(http.responseText);
-                //     }
-                // }
-                // http.send(params);
+                http.onreadystatechange = function() {//Call a function when the state changes.
+                    if(http.readyState == 4 && http.status == 200) {
+                        // alert(http.responseText);
+                    }
+                }
+                http.send(params);*/
             }
 
             function LedAction(action, shortcut = false) {
                 // var http = new XMLHttpRequest();
                 // var url = '/api/SendLedCommand';
                 if(shortcut) {
-                    ws.send(JSON.stringify({
+                    socket.emit("action", JSON.stringify({
                         shortcut: action
                     }));
                     // var params = 'shortcut='+action;
                 } else {
                     // var params = 'action='+action;
-                    ws.send(JSON.stringify({
+                    socket.emit("action", JSON.stringify({
                         action: action
                     }));
                 }

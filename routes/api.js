@@ -3,7 +3,6 @@ var session = require('express-session');
 let ejs = require('ejs');
 var bodyParser = require('body-parser');
 var moment = require('moment');
-var expressWs = require('express-ws');
 
 const SerialPort = require('serialport');
 const Readline = require('@serialport/parser-readline');
@@ -20,6 +19,10 @@ const CronJobs = require("../src/CronJobs");
 
 var config = require('../config');
 
+
+const { sendMessage, ws } = require('../src/SocketIO');
+
+
 var app = express.Router();
 
 app.post('/VerifyCron', function(req, res) {
@@ -29,9 +32,16 @@ app.post('/VerifyCron', function(req, res) {
     console.log(Verify);
     res.send(Verify);
   });
-
+/*
 app.post('/SendLedCommand', async (req, res) => {
-  console.log(req.body);
+  const foo = async () => {
+    const roomId = '12345';
+    const key = 'new-order';
+    const message = 'new order assigned';
+    
+    await sendMessage(roomId, key, message);
+  };
+  console.log(foo(), 893);
   if(req.body.shortcut) {
     if((req.body.shortcut).startsWith("Brightness")) {
       await Arduino.Brightness((req.body.shortcut).split('|')[1])
@@ -40,22 +50,23 @@ app.post('/SendLedCommand', async (req, res) => {
     await Arduino.Write(req.body.action);
   }
   res.send(req.body);
-});
+});*/
 
-app.ws('/SendLedCommand', async (ws, req) => {
-  ws.on('message', async (msg) => {
-    if(msg == "__ping__") return;
-    msg = JSON.parse(msg);
-    console.log(msg, 383);
-    if(msg.shortcut) {
-      if((msg.shortcut).startsWith("Brightness")) {
-        await Arduino.Brightness((msg.shortcut).split('|')[1])
+// app.ws('/SendLedCommand', async (ws, req) => {
+  ws().on('connection', async (socket) => {
+    socket.on('action', async (msg) => {
+      if(msg == "__ping__") return;
+      msg = JSON.parse(msg);
+      if(msg.shortcut) {
+        if((msg.shortcut).startsWith("Brightness")) {
+          await Arduino.Brightness((msg.shortcut).split('|')[1])
+        }
+      } else {
+        await Arduino.Write(msg.action);
       }
-    } else {
-      await Arduino.Write(msg.action);
-    }
+    });
   });
-});
+// });
 
   app.post('/blocktime/:ID', async (req, res) => {
     if(req.params.ID) {

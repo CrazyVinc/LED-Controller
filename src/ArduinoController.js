@@ -3,6 +3,7 @@ var fs = require('fs');
 // var expressWs = require('express-ws');
 
 // var api = require('../routes/api');
+var moment = require('moment');
 
 const SerialPort = require('serialport');
 const Readline = require('@serialport/parser-readline');
@@ -24,24 +25,37 @@ parser.setMaxListeners(5);
 // parser.on('data', console.log);
 ArduinoPort.on('open', () => console.log('yay the port is open!'))
 ArduinoPort.on('error', () => console.log('boo we had an error!'))
+ArduinoPort.on('close', () => console.log('boo we had an close!'))
 
 function ArduinoWrite(data) {
+    var tmp = 0;
     pq.add(() => {
         return new Promise(function(resolve, reject) {
-            ArduinoPort.write(data, function() {
-                console.log('IR written: ' + data);
-                parser.once('data', (data) => {
-                    // console.log(global.expressWs.getWss().clients);
-                    console.log('IR Response: ' + data);
-                    if(data.startsWith("Command Error: ")) {
-                        fs.appendFile('errors.txt', data+'\n', function (err) {
-                            if (err) throw err;
-                            console.log('Updated!');
-                          });
-                    }
-                    resolve(data);
+            if(!ArduinoPort.isOpen) {
+                tmp = 2500;
+                ArduinoPort.open();
+                console.log("Waiting 2 sec for reconnecting!");
+            }
+            setTimeout(() => {
+                ArduinoPort.write(data, function() {
+                    console.log('IR written: ' + data);
+                    parser.once('data', (data) => {
+                        // console.log(global.expressWs.getWss().clients);
+                        console.log('IR Response: ' + data);
+                        if(data.startsWith("Command Error: ")) {
+                            fs.appendFile('errors.txt', "["+moment().toLocaleString() + "] " +data+'\n', function (err) {
+                                if (err) throw err;
+                                console.log('Error code saved!');
+                            });
+                        }
+                        resolve(data);
+                    });
+                    setTimeout(() => {
+                        resolve("5 second Timed out!")
+                    }, 5000)
                 });
-            });
+                if(tmp !== 0) console.log("Resume!");
+            }, tmp);
         });
     });
 }

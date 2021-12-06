@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+	<head>
+        <%- include("./includes/head.ejs", {Page: "Error "+error.code}) %>
+	</head>
+	<body>
+        <%- include("includes/nav") %>
+        <div class="container is-fluid">
+            <div class="columns">
+                <div class="column">
+                    Error:
+                </div>
+                <div class="column">
+                    <%- error.code %>
+                </div>
+            </div>
+        </div>
+	</body>
+</html>
