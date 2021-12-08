@@ -6,6 +6,10 @@ require('console-stamp')(console, '[HH:MM:ss.l]');
 
 var mysql = require('mysql2');
 
+const { socketConnection } = require('./src/SocketIO');
+const { pq, reset } = require("./src/Queue");
+const gradient = require('gradient-color');
+
 var express = require('express');
 var session = require('express-session');
 var MySQLStore = require('express-mysql-session')(session);
@@ -24,10 +28,10 @@ var CronVerify = require('cron-validate');
 const UUID = require('uuidv4');
 
 const Arduino = require("./src/ArduinoController");
+const {hexRgb} = require("./src/utils");
 const {connection} = require("./src/Database");
 const CronJobs = require("./src/CronJobs");
 const { verify, randomUUID } = require('crypto');
-const { socketConnection } = require('./src/SocketIO');
 
 var config = require('./config');
 
@@ -82,7 +86,7 @@ var auth = async (req, res, next) => {
       } else {
         console.log(000, req.session.CheckFree);
         req.session.CheckFree--;
-        console.log(-001, req.session.CheckFree);
+        console.log(-1, req.session.CheckFree);
         return next();
       }
     } else {
@@ -133,6 +137,14 @@ app.use('/new', auth, require("./routes/new"));
 app.get('/Settings', auth, function(req, res) {
   res.render('settings');
 });
+
+app.get('/Calendar', async(req, res) => {
+  const [BlockedRuns] = await connection.promise().query('SELECT * FROM blockedruns');
+  const [results, fields] = await connection.promise().query(
+      'SELECT * FROM ledtimes WHERE `enabled`=\"true\"');
+  res.render('Calendar', {"LEDS": results, "BlockedRuns": BlockedRuns, Cron: CronJob, moment: moment});
+});
+
 app.get('/control', auth, function(req, res) {
   res.render('control');
 });
@@ -158,7 +170,21 @@ app.post('/modal/NewEvent', auth, async(req, res) => {
 app.use('/api', auth, require("./routes/api"));
 
 app.get('/test', async(req, res) => {
-  res.send("f");
+  if(req.query.stop !== undefined) {
+    res.send("stop");
+    return;
+  }
+  const colors = gradient.default([
+    'red',
+    'blue'
+  ], req.query.count || 10)
+  var search = /([0-9]+), ([0-9]+), ([0-9]+)/;
+
+  colors.forEach(color => {
+    color = color.match(search);
+    Arduino.Write("rgb "+color[0]);
+  });
+  res.send(colors);
 });
 
 app.get('*', auth, function(req, res){

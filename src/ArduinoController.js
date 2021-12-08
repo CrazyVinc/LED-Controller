@@ -1,15 +1,14 @@
 require('console-stamp')(console, '[HH:MM:ss.l]');
 var fs = require('fs');
-// var expressWs = require('express-ws');
 
-// var api = require('../routes/api');
+const {ws} = require('./SocketIO');
 var moment = require('moment');
 
 const SerialPort = require('serialport');
 const Readline = require('@serialport/parser-readline');
 const Ready = require('@serialport/parser-ready');
-const PromiseQueue = require("easy-promise-queue").default;
-let pq = new PromiseQueue({concurrency: 1});
+
+const { pq } = require("./Queue");
 
 
 const ArduinoPort = new SerialPort('COM4', {
@@ -31,6 +30,7 @@ function ArduinoWrite(data) {
     var tmp = 0;
     pq.add(() => {
         return new Promise(function(resolve, reject) {
+            ws().emit("QueueCount", pq.waitingCount);
             if(!ArduinoPort.isOpen) {
                 tmp = 2500;
                 ArduinoPort.open();
@@ -39,16 +39,16 @@ function ArduinoWrite(data) {
             setTimeout(() => {
                 ArduinoPort.write(data, function() {
                     console.log('IR written: ' + data);
-                    parser.once('data', (data) => {
-                        // console.log(global.expressWs.getWss().clients);
-                        console.log('IR Response: ' + data);
-                        if(data.startsWith("Command Error: ")) {
-                            fs.appendFile('errors.txt', "["+moment().toLocaleString() + "] " +data+'\n', function (err) {
+                    parser.once('data', (res) => {
+                        console.log('IR Response: ' + res);
+                        if(res.startsWith("Command Error: ")) {
+                            fs.appendFile('errors.txt', "["+moment().toLocaleString() + "] " +res+'\n', function (err) {
                                 if (err) throw err;
                                 console.log('Error code saved!');
                             });
                         }
-                        resolve(data);
+                        ws().emit("response", (res).slice(0,-1));
+                        resolve(res);
                     });
                     setTimeout(() => {
                         resolve("5 second Timed out!")

@@ -232,6 +232,7 @@ var LED2Cron = new CronJob.CronJob('0 */5 * * * *', async () => {
 
                 if(row.Arduino !== undefined) {
                     if(new RegExp("\(\d*\)").test(row.Arduino)) {
+                        if(!(row.Arduino).includes('\\n')) row.Arduino = row.Arduino+"\\n";
                         asyncForEach((row.Arduino).split('\\n'), async (row2) => {
                             if(new RegExp("sleep\(\d*\)").test(row2)) {
                                 setTimeout(()=> {}, row2.match(/\d*/g).join(''));

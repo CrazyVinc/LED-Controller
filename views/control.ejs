@@ -9,44 +9,13 @@
         <script>
           const socket = io();
             socket.on("connect", () => {
-                console.log(socket.id); // x8WIv7-mJelg7on_ALbx
+                console.log(socket.id);
             });
 
             socket.on("hello", data => {
                 console.log("Message: " + data);
             });
         </script>
-        <!-- <script type = "text/javascript">
-        const ws = new WebSocket('wss://led.vlgnl.ga/api/SendLedCommand')
-            ws.onopen = () => {
-              console.log('ws opened on browser')
-              ws.send('hello world')
-            }
-            
-            ws.onmessage = (message) => {
-              console.log(`message received`, message.data)
-            }
-            function ping() {
-                    ws.send('__ping__');
-                    tm = setTimeout(function () {
-
-                }, 5000);
-            }
-
-            function pong() {
-                clearTimeout(tm);
-            }
-            ws.onopen = function () {
-                setInterval(ping, 30000);
-            }
-            ws.onmessage = function (evt) {
-                var msg = evt.data;
-                if (msg == '__pong__') {
-                    pong();
-                    return;
-                }
-            }
-        </script> -->
 	</head>
 	<body>
         <%- include("includes/nav") %>
@@ -59,15 +28,15 @@
                         </span>
                         <div class="buttons has-addons">
                             <button onclick="LedAction('power on')" class="button is-success">On</button>
-                            <button onclick="LedAction('power off'); SetRGB({rgb: {r:0,g:0,b:0}});"  class="button is-danger">Off</button>
+                            <button onclick="socket.emit('Queue', 'reset'); LedAction('power off'); SetRGB({rgb: {r:0,g:0,b:0}});"  class="button is-danger">Off</button>
                         </div>
                     </div>
                 </div>
                 <div class="column">
+                    <div onclick="LedAction('Brightness|'+document.getElementById('sliderWithValue').value, true)" class="button is-success">Set Level</div>
                     <!-- document.getElementById("sliderWithValue").value -->
                     <input id="sliderWithValue" class="slider has-output is-fullwidth" min="0" max="6" value="3" step="1" type="range">
                     <output for="sliderWithValue">3</output>
-                    <button onclick="LedAction('Brightness|'+document.getElementById('sliderWithValue').value, true)" class="button is-success">Set Level</button>
                 </div>
             </div>
             <div class="columns">
@@ -75,7 +44,7 @@
                     <div style="margin-bottom: -0.5rem;" class="buttons has-addons">
                         <button onclick="LedAction('bright up')" class="button"><i class="fas fa-arrow-circle-up"></i></button>
                         <button onclick="LedAction('bright down')" class="button"><i class="fas fa-arrow-circle-down"></i></button>
-                        <button onclick="LedAction('power off'); SetRGB({rgb: {r:0,g:0,b:0}});" class="button"><i class="fas fa-lightbulb-slash"></i></button>
+                        <button onclick="LedAction('power off');" class="button"><i class="fas fa-lightbulb-slash"></i></button>
                         <button onclick="LedAction('power on')" class="button"><i class="fas fa-lightbulb-on"></i></button>
                     </div>
                     <div style="margin-bottom: -0.5rem;" class="buttons has-addons">
@@ -114,6 +83,14 @@
                     </div>
                 </div>
         </div>
+        <footer class="footer" style="position: sticky;bottom:0px;">
+            <div class="content has-text-centered">
+                <p>
+                    <strong>RGB: </strong><span id="RGBColor">???, ???, ???</span>
+                    <strong>Queue: </strong><span id="QueueCount">0</span>
+                </p>
+            </div>
+        </footer>
         <script>
             var colorPicker = new iro.ColorPicker('#picker', {
                 // wheelLightness: true,
@@ -150,49 +127,27 @@
                     action: 'rgb '+action.rgb.r+','+action.rgb.g+','+action.rgb.b,
                     shortcut: false
                 }));
-                /*
-                var http = new XMLHttpRequest();
-                var url = '/api/SendLedCommand';
-                var params = 'action=rgb '+action.rgb.r+','+action.rgb.g+','+action.rgb.b;
-                http.open('POST', url, true);
-        
-                //Send the proper header information along with the request
-                http.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-        
-                http.onreadystatechange = function() {//Call a function when the state changes.
-                    if(http.readyState == 4 && http.status == 200) {
-                        // alert(http.responseText);
-                    }
-                }
-                http.send(params);*/
             }
 
             function LedAction(action, shortcut = false) {
-                // var http = new XMLHttpRequest();
-                // var url = '/api/SendLedCommand';
                 if(shortcut) {
                     socket.emit("action", JSON.stringify({
                         shortcut: action
                     }));
-                    // var params = 'shortcut='+action;
                 } else {
-                    // var params = 'action='+action;
                     socket.emit("action", JSON.stringify({
                         action: action
                     }));
                 }
-                // http.open('POST', url, true);
-
-                // //Send the proper header information along with the request
-                // http.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-
-                // http.onreadystatechange = function() {//Call a function when the state changes.
-                //     if(http.readyState == 4 && http.status == 200) {
-                //         // alert(http.responseText);
-                //     }
-                // }
-                // http.send(params);
             }
+            socket.on("response", data => {
+                document.getElementById("RGBColor").innerHTML = data
+                console.log("a 34wb ", data);
+            });
+            socket.on("QueueCount", data => {
+                // console.log("a 34wb ", data);
+                document.getElementById("QueueCount").innerHTML = data
+            });
             </script>
     <script src="assets/js/bulma-slider.min.js"></script>
     <script>
