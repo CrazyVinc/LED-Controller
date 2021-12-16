@@ -7,7 +7,7 @@
         <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
         <script src="/socket.io/socket.io.js"></script>
         <script>
-          const socket = io();
+            const socket = io();
             socket.on("connect", () => {
                 console.log(socket.id);
             });
@@ -78,10 +78,10 @@
                         <button onclick="LedAction('mode smooth')" style="background-color:lightslategray" class="button">Smooth</button>
                     </div>
                 </div>
-            <div class="column">
-                        <div id="picker"></div>
-                    </div>
+                <div class="column">
+                    <div id="picker"></div>
                 </div>
+            </div>
         </div>
         <footer class="footer" style="position: sticky;bottom:0px;">
             <div class="content has-text-centered">

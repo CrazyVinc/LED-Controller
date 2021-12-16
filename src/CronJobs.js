@@ -1,4 +1,3 @@
-
 var path = require('path');
 
 require('console-stamp')(console, '[HH:MM:ss.l]');
@@ -72,36 +71,10 @@ var LED = new CronJob.CronJob('0 0 0 * * *', async () => {
     console.log('LEDs completed: ' + LEDWakeUpEvent + 'ms');
 }, null, false);
 var LEDJobTracking = {};
-
-
-
 var Events = {};
 var Events2 = {};
+var JobsInit = {};
 
-var LEDJobReload = new CronJob.CronJob('0 */30 * * * *', async () => {
-    connection.query("SELECT * FROM `ledtimes` WHERE `Name`=\"active\" AND `enabled`=\"true\" LIMIT 1", function(err, rows, fields) {
-        if(err) {
-            DBStatus.status = {Status: false, info: err}
-            console.error("Database error: ", err);
-            LED.stop();
-            return;
-        }
-        if(rows.length > 0) {
-            console.log("\nREFRESH\n");
-            console.log(rows[0].CronTime);
-            LEDJobTracking = rows[0];
-            LED.setTime(CronJob.time(rows[0].CronTime));
-            LED.start();
-            LedTMP.WakeUP = rows[0];
-        } else {
-            console.log("No active LED Timer found!");
-            LED.stop();
-        }
-    })
-}, null, true, null, null, true);
-
-// JobsInit[Event[0]] = {"init": false}
-var JobsInit = {}
 var EventReload = new CronJob.CronJob('*/30 * * * * *', async () => {
     ConfigControl.ReloadConfig()
     var options = ConfigControl.config.options;
@@ -206,7 +179,7 @@ var LED2Cron = new CronJob.CronJob('0 */5 * * * *', async () => {
     });
     
     const [results, fields] = await connection.promise().query(
-        'SELECT * FROM ledtimes WHERE enabled=\"true\" AND Name NOT in ("active")');
+        'SELECT * FROM ledtimes WHERE enabled=\"true\"');
 
     LEDCrons["jobs"]["new"] = [];
     asyncForEach(results, async (row) => {
@@ -278,7 +251,6 @@ var LED2Cron = new CronJob.CronJob('0 */5 * * * *', async () => {
 
 module.exports = { 
     LedJob: LED,
-    LEDJobReload,
     EventReload,
     Events
 }

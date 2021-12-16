@@ -28,9 +28,15 @@ function hexToRGB(hex, alpha) {
       return "rgb(" + r + ", " + g + ", " + b + ")";
   }
 }
+function capitalizeFirstLetter(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
 
+const RemoteCntrlColors = ["red", "green", "blue", "white", "scarlet", "Light Green", "periwinkle", "orange", "mint", "purple", "tangerine", "sky", "rose", "Yellow", "aqua", "pink"];
 module.exports = {
     asyncForEach: asyncForEach,
     hexRgb: hexToRGB,
-    RandomString: RandomString()
+    RandomString: RandomString(),
+    RemoteCntrlColors,
+    capitalizeFirstLetter,
 }

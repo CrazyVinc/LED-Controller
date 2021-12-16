@@ -28,7 +28,7 @@ var CronVerify = require('cron-validate');
 const UUID = require('uuidv4');
 
 const Arduino = require("./src/ArduinoController");
-const {hexRgb} = require("./src/utils");
+const {RemoteCntrlColors, capitalizeFirstLetter} = require("./src/utils");
 const {connection} = require("./src/Database");
 const CronJobs = require("./src/CronJobs");
 const { verify, randomUUID } = require('crypto');
@@ -42,6 +42,7 @@ const app = express();
 
 const server = http.createServer(app);
 socketConnection(server);
+Arduino.Write("rgb 0");
 
 
 app.set('view engine', 'ejs');
@@ -164,7 +165,7 @@ app.post('/modal/Calendar/:ID', auth, async(req, res) => {
 
 app.post('/modal/NewEvent', auth, async(req, res) => {
   console.log(req.body);
-  res.render('modal/NewEvent', {Cron: CronJob, moment: moment, req: req});
+  res.render('modal/NewEvent', {capitalizeFirstLetter, Cron: CronJob, moment: moment, req: req, RemoteCntrlColors: RemoteCntrlColors});
 });
 
 app.use('/api', auth, require("./routes/api"));

@@ -18,13 +18,12 @@ const ArduinoPort = new SerialPort('COM4', {
 
 const parser = ArduinoPort.pipe(new Readline({ delimiter: '\n' }))
 parser.setMaxListeners(5);
-// // ArduinoPort.pipe(parser);
 
 // parser.on('ready', () => console.log('the ready byte sequence has been received'))
 // parser.on('data', console.log);
 ArduinoPort.on('open', () => console.log('yay the port is open!'))
 ArduinoPort.on('error', () => console.log('boo we had an error!'))
-ArduinoPort.on('close', () => console.log('boo we had an close!'))
+ArduinoPort.on('close', () => console.log('Port Closed!'))
 
 function ArduinoWrite(data) {
     var tmp = 0;
@@ -39,7 +38,7 @@ function ArduinoWrite(data) {
             setTimeout(() => {
                 ArduinoPort.write(data, function() {
                     console.log('IR written: ' + data);
-                    parser.once('data', (res) => {
+                    var parsr = parser.once('data', (res) => {
                         console.log('IR Response: ' + res);
                         if(res.startsWith("Command Error: ")) {
                             fs.appendFile('errors.txt', "["+moment().toLocaleString() + "] " +res+'\n', function (err) {
@@ -51,8 +50,8 @@ function ArduinoWrite(data) {
                         resolve(res);
                     });
                     setTimeout(() => {
-                        resolve("5 second Timed out!")
-                    }, 5000)
+                        parsr.emit('data', "WARNING: Timed out!");
+                    }, 5000);
                 });
                 if(tmp !== 0) console.log("Resume!");
             }, tmp);
