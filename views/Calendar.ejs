@@ -10,6 +10,7 @@
   <link href="https://cdn.jsdelivr.net/npm/jspanel4@4.12.0/dist/jspanel.css" rel="stylesheet">
   <!-- jsPanel JavaScript -->
   <script src="https://cdn.jsdelivr.net/npm/jspanel4@4.12.0/dist/jspanel.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
 
   <!-- optional jsPanel extensions -->
   <script src="https://cdn.jsdelivr.net/npm/jspanel4@4.12.0/dist/extensions/modal/jspanel.modal.js"></script>
@@ -19,15 +20,18 @@
   <script src="https://cdn.jsdelivr.net/npm/jspanel4@4.12.0/dist/extensions/contextmenu/jspanel.contextmenu.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspanel4@4.12.0/dist/extensions/dock/jspanel.dock.js"></script>
 
-
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.9/l10n/nl.min.js" integrity="sha512-ZfjeSBuSwzLsxhAXsxOEZOTxFJPcSYQx8l/0kN0x1Ze2SWsQU0K3hcrqEz0LpCabQuQNlOuUGHERv1ibLRtnnA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script>
+      flatpickr.localize(flatpickr.l10ns.nl);
       var calendar;
       var Panels = {};
+
       function NewEvent(Date, Data) {
-        if(Panels["NewEvent"] !== undefined) {
-          Panels["NewEvent"].close();
-        }
+        if(Panels["NewEvent"] !== undefined) { Panels["NewEvent"].close(); }
         Panels["NewEvent"] = jsPanel.create({
+          onclosed: function(panel, closedByUser) {
+              delete Panels["NewEvent"];
+          },
           contentAjax: {
             method: "POST",
             url: "/modal/NewEvent?date="+Date,
@@ -39,25 +43,33 @@
                 this.setRequestHeader('Content-Type', 'application/json');
             },
           },
-          headerTitle: "New Event",
-          contentSize: '700 auto'
+          headerTitle: "New Event: "+Date,
+          theme: 'dark',
+          border: 'thick',
+          contentSize: "75vw 75vh"
         });
       }
       function EditEvent(URL, Name, Data) {
-        jsPanel.ajax({
-          method: "POST",
-          url: URL,
-          data: JSON.stringify(Data),
-          done: (xhr) => {
-            Panels[Data.extendedProps.ID] = jsPanel.create({
-              headerTitle: Name,
-              content: xhr.responseText,
-              panelSize: '700 auto'
-            });
+        if(Panels["NewEvent"] !== undefined) { Panels["NewEvent"].close(); }
+        Panels["NewEvent"] = jsPanel.create({
+          onclosed: function(panel, closedByUser) {
+              delete Panels["NewEvent"];
           },
-          beforeSend: function() {
-              this.setRequestHeader('Content-Type', 'application/json');
-          }
+          contentAjax: {
+            method: "POST",
+            url: URL,
+            data: JSON.stringify(Data),
+            // done: function (xhr, panel) {
+            //   panel.content.innerHTML = xhr.responseText;
+            // },
+            beforeSend: function() {
+                this.setRequestHeader('Content-Type', 'application/json');
+            },
+          },
+          headerTitle: Name,
+          theme: 'dark',
+          border: 'thick',
+          contentSize: "75vw 75vh"
         });
       }
 

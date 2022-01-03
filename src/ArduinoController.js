@@ -1,5 +1,6 @@
 require('console-stamp')(console, '[HH:MM:ss.l]');
 var fs = require('fs');
+var {Buffer} = require('buffer');
 
 const {ws} = require('./SocketIO');
 var moment = require('moment');
@@ -11,49 +12,68 @@ const Ready = require('@serialport/parser-ready');
 const { pq } = require("./Queue");
 
 
-const ArduinoPort = new SerialPort('COM4', {
+const ArduinoPort = new SerialPort('/dev/ttyUSB0', {
     baudRate : 9600,
+    parity:        'none',
     autoOpen: true,
 });
 
-const parser = ArduinoPort.pipe(new Readline({ delimiter: '\n' }))
-parser.setMaxListeners(5);
-
-// parser.on('ready', () => console.log('the ready byte sequence has been received'))
-// parser.on('data', console.log);
+// const parser = ArduinoPort.pipe(new Readline({ delimiter: '\n' }));
+ArduinoPort.setDefaultEncoding('utf-8');
+// parser.setMaxListeners(5);
+// ArduinoPort.setMaxListeners(1);
+// parser.on('readable', (e) => {
+//     console.log("Data: ", parser.read().toString());
+// })
 ArduinoPort.on('open', () => console.log('yay the port is open!'))
-ArduinoPort.on('error', () => console.log('boo we had an error!'))
-ArduinoPort.on('close', () => console.log('Port Closed!'))
+ArduinoPort.on('error', (e) => console.log('boo we had an error!', e))
+ArduinoPort.on('close', (e) => {
+    setTimeout(() => {
+        ArduinoPort.open();
+    }, 2000);
+    console.log('Port Closed!', e)
+})
 
 function ArduinoWrite(data) {
-    var tmp = 0;
+    // data = data+"\n";
+    var tmp = 100;
+    let timeout;
     pq.add(() => {
         return new Promise(function(resolve, reject) {
             ws().emit("QueueCount", pq.waitingCount);
             if(!ArduinoPort.isOpen) {
-                tmp = 2500;
+                tmp = 7500;
+                // if(!ArduinoPort.isOpen) {
                 ArduinoPort.open();
-                console.log("Waiting 2 sec for reconnecting!");
+                // }
+                console.log("Waiting 7,5 sec for reconnecting!");
+                ws().emit("response", "Reconnecting!");
             }
             setTimeout(() => {
-                ArduinoPort.write(data, function() {
+                ArduinoPort.write(data, (te) => {
+                    if(te) {
+                        console.log(te, 03);
+                    }
+                    // var parsr = parser.once('readable', () => {
+                    //     res=parser.read() || "Nothing!";
+                    //     console.log('IR Response: ' + res);
+                    //     // if(res.startsWith("Command Error: ")) {
+                    //     //     fs.appendFile('errors.txt', "["+moment().toLocaleString() + "] " +res+'\n', function (err) {
+                    //     //         if (err) throw err;
+                    //     //         console.log('Error code saved!');
+                    //     //     });
+                    //     // }
+                    //     ws().emit("response", (res).slice(0,-1));
+                        // clearTimeout(timeout);
+                        resolve();
+                    // });
                     console.log('IR written: ' + data);
-                    var parsr = parser.once('data', (res) => {
-                        console.log('IR Response: ' + res);
-                        if(res.startsWith("Command Error: ")) {
-                            fs.appendFile('errors.txt', "["+moment().toLocaleString() + "] " +res+'\n', function (err) {
-                                if (err) throw err;
-                                console.log('Error code saved!');
-                            });
-                        }
-                        ws().emit("response", (res).slice(0,-1));
-                        resolve(res);
-                    });
-                    setTimeout(() => {
-                        parsr.emit('data', "WARNING: Timed out!");
-                    }, 5000);
+                    // timeout = setTimeout(() => {
+                        // ArduinoPort.close();
+                        // parsr.emit('readable', "WARNING: Timed out!");
+                    // }, 10000);
+                    if(tmp !== 100) console.log("Resume!");
                 });
-                if(tmp !== 0) console.log("Resume!");
             }, tmp);
         });
     });
@@ -109,7 +129,7 @@ async function Brightness(level) {
 
 module.exports = {
     ArduinoPort,
-    parser,
+    // parser,
     Brightness,
     Write: ArduinoWrite,
     Shortcuts,

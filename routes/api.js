@@ -17,7 +17,7 @@ const Arduino = require("../src/ArduinoController");
 const {connection} = require("../src/Database");
 const CronJobs = require("../src/CronJobs");
 
-var config = require('../config');
+var config = require('../src/ConfigManager');
 
 
 const { sendMessage, ws } = require('../src/SocketIO');

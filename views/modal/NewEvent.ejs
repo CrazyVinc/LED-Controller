@@ -1,92 +1,354 @@
 <!DOCTYPE html>
 <html>
   <body>
-    <style>
-      option::selection {
-        background:rgba(255, 255, 255, 0.5);
-      }
-    </style>
     <div class="container">
-      <div class="columns">
-        <div class="column">
-          <form>
-            <div class="field">
-              <label class="label">Name</label>
-              <div class="control">
-                <input class="input" type="text" placeholder="Text input">
+      <form action="/new/event" method="post">
+        <div class="columns">
+          <div class="column">
+            <div class="field has-addons">
+              <p class="control">
+                <a class="button is-static">
+                  Naam:
+                </a>
+              </p>
+              <p class="control">
+                <input class="input" type="text" name="Naam" placeholder="Name" required>
+              </p>
+            </div>
+
+            <div class="columns">
+              <div class="column">
+                <div class="field">
+                  <input id="IRLedState" onchange="StateChange()" type="checkbox" name="IRLed" class="switch">
+                  <label for="IRLedState">IR Led</label>
+                </div>
+              </div>
+              <div class="column">
+                <div class="field">
+                  <input id="RGBLedState" onchange="StateChange()" type="checkbox" name="RGBLed" class="switch">
+                  <label for="RGBLedState">RGB Led</label>
+                </div>
               </div>
             </div>
 
-            <div class="field">
-              <label class="label">Time</label>
-              <input type="text" id="TimeSel" hidden/>
+            <div id="IRLed" style="display: none;">
+              <div class="field has-addons">
+                <p class="control">
+                  <a class="button is-static">
+                    IR Color:
+                  </a>
+                </p>
+                <p class="control">
+                  <span class="select">
+                    <select>
+                      <% RemoteCntrlColors.forEach(color => { %>
+                        <option style=<%= "background-color:"+color+"!important" %> value="<%- color %>"><%- color %></option>
+                      <% }); %>
+                    </select>
+                  </span>
+                </p>
+              </div>
             </div>
+
+            <div id="RGBLed" style="display: none;">
+              <div class="box">
+                <div id="picker"></div>
+                <br>
+                <div class="field has-addons">
+                  <p class="control">
+                    <a class="button is-static">
+                      RGB:
+                    </a>
+                  </p>
+                  <p class="control">
+                    <input class="input" id="RGBValue" name="RGBValue" type="text" value="0,0,0" disabled>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+
             
-            <div class="field has-addons has-addons">
-              <p class="control">
-                <span class="select">
-                  <select>
-                    <option>$</option>
-                    <option>£</option>
-                    <option>€</option>
-                  </select>
-                </span>
-              </p>
-              <p class="control">
-                <input class="input" type="number" min=0 max=6 placeholder="Brightness">
-              </p>
-              <p class="control">
-                <span class="select">
-                  <select>
-                    <optgroup label="Colors">
-                      <option class="option" style="background: red">52</option>
-                      <option class="option">£</option>
-                      <option class="option">€</option>
-                    </optgroup>
-                  </select>
-                </span>
-              </p>
-            </div>
+          </div>
+          <div class="column is-three-fifths">
             <div class="field">
-              <div class="control">
-              <label class="checkbox">
-                <input type="checkbox">
-                Enable
-              </label>
+              <label for="RunType">Calendar</label>
+              <input id="RunType" onchange="StateChange()" type="checkbox" class="switch">
+              <label for="RunType">Cron</label>
+            </div>
+            <div id="Calendar" class="card">
+              <header class="card-header">
+                <p class="card-header-title is-centered">
+                  Calendar
+                </p>
+              </header>
+              <div class="card-content">
+                <div class="field">
+                  <input type="text" id="TimeSel" hidden/>
+                </div>
               </div>
             </div>
+            <div id="Cron" style="display: none;" class="card">
+              <header class="card-header">
+                <p class="card-header-title is-centered">
+                  Cron
+                </p>
+              </header>
+              <div class="card-content">
+                <div class="box">
+                  <div class="field has-addons has-addons" style="margin: 0;">
+                    <p class="control" style="width: 100%;">
+                      <button class="button is-expended is-fullwidth is-static">
+                        <span>Seconden</span>
+                      </button>
+                    </p>
+                    <p class="control" style="width: 100%;">
+                      <button class="button is-expended is-fullwidth is-static">
+                        <span>Minuten</span>
+                      </button>
+                    </p>
+                    <p class="control" style="width: 100%;">
+                      <button class="button is-expended is-fullwidth is-static">
+                        <span>Uren</span>
+                      </button>
+                    </p>
+                  </div>
+                  <div class="field has-addons has-addons">
+                    <div class="control" style="width: 100%;">
+                      <div class="select is-multiple" style="width: 100%;">
+                        <select multiple name="Sec" style="width: 100%;">
+                          <option onclick="selectAll(this)">All</option>
+                          <% for (let DayINT = 0; DayINT < 60; DayINT++) { %>
+                            <option value="<%- DayINT %>"><%- DayINT %></option>
+                          <% } %>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="control" style="width: 100%;">
+                      <div class="select is-multiple" style="width: 100%;">
+                        <select multiple name="Min" style="width: 100%;">
+                          <option onclick="selectAll(this)">All</option>
+                          <% for (let DayINT = 0; DayINT < 60; DayINT++) { %>
+                            <option value="<%- DayINT %>"><%- DayINT %></option>
+                          <% } %>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="control" style="width: 100%;">
+                      <div class="select is-multiple" style="width: 100%;">
+                        <select multiple name="Hours" style="width: 100%;">
+                          <option onclick="selectAll(this)">All</option>
+                          <% for (let DayINT = 0; DayINT < 24; DayINT++) { %>
+                            <option value="<%- DayINT %>"><%- DayINT %></option>
+                          <% } %>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
 
-            <div class="field">
-              <div class="control">
-                <label class="radio">
-                  <input type="radio" name="question">
-                  Yes
-                </label>
-                <label class="radio">
-                  <input type="radio" name="question">
-                  No
-                </label>
+                  <div class="field has-addons has-addons" style="margin: 0;">
+                    <p class="control" style="width: 100%;">
+                      <button class="button is-expended is-fullwidth is-static">
+                        <span>Dag</span>
+                      </button>
+                    </p>
+                    <p class="control" style="width: 100%;">
+                      <button class="button is-expended is-fullwidth is-static">
+                        <span>Maand</span>
+                      </button>
+                    </p>
+                    <p class="control" style="width: 100%;">
+                      <button class="button is-expended is-fullwidth is-static">
+                        <span>WerkDag</span>
+                      </button>
+                    </p>
+                  </div>
+                  <div class="field has-addons has-addons">
+                    <div class="control" style="width: 100%;">
+                      <div class="select is-multiple" style="width: 100%;">
+                        <select multiple name="DayOfMonth" style="width: 100%;">
+                          <option onclick="selectAll(this)">All</option>
+                          <% for (let DayINT = 1; DayINT < 32; DayINT++) { %>
+                            <option value="<%- DayINT %>"><%- DayINT %></option>
+                          <% } %>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="control" style="width: 100%;">
+                      <div class="select is-multiple" style="width: 100%;">
+                        <select multiple name="Months" style="width: 100%;">
+                          <option onclick="selectAll(this)">All</option>
+                          <% for (let DayINT = 0; DayINT < 12; DayINT++) { %>
+                            <option value="<%- DayINT %>"><%- capitalizeFirstLetter(moment().locale("NL").month(DayINT).format("MMMM")); %></option>
+                          <% } %>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="control" style="width: 100%;">
+                      <div class="select is-multiple" style="width: 100%;">
+                        <select multiple name="DayOfWeek" style="width: 100%;">
+                          <option onclick="selectAll(this)">All</option>
+                          <option value="1">Maandag</option>
+                          <option value="2">Dinsdag</option>
+                          <option value="3">Woensdag</option>
+                          <option value="4">Donderdag</option>
+                          <option value="5">Vrijdag</option>
+                          <option value="6">Zaterdag</option>
+                          <option value="0">Zondag</option>
+                        </select>
+                      </div>
+                    </div>
+                    <!-- <p class="control">
+                      <input class="input" type="number" min=0 max=6 placeholder="Brightness">
+                    </p> -->
+                  </div>
+                </div>
               </div>
             </div>
-
-            <div class="field is-grouped">
-            <div class="control">
-            <button class="button is-link">Submit</button>
-            </div>
-            <div class="control">
-            <button class="button is-link is-light">Cancel</button>
-            </div>
-            </div>
-          </form>
+          </div>
         </div>
-      </div>
+
+        <div class="field is-grouped">
+          <div class="control">
+            <button class="button is-link">Submit</button>
+          </div>
+          <div class="control">
+            <button class="button is-link is-light">Cancel</button>
+          </div>
+        </div>
+      </form>
     </div>
     <script>
-        flatpickr("#TimeSel", {
-          enableTime: true,
-          enableSeconds: true,
-          inline: true
+      function ReturnError(error, ErrorObject) {
+        bulmaToast.toast({
+          message: error,
+          type: 'is-danger',
+          position: 'top-center'
         });
+        return ErrorObject || error;
+      }
+      var form2 = document.querySelector("form");
+      form2.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const data = new URLSearchParams();
+        var formdata = new FormData(form2);
+        if( !(formdata.has("IRLed") || formdata.has("RGBLed")) ) {
+            bulmaToast.toast({
+              message: "Geen LED gekozen!",
+              type: 'is-danger',
+              position: 'top-center'
+            });
+            return "Geen LED gekozen!";
+        }
+        if(document.getElementById("RunType").checked) {
+          formdata.append("RunType", "Cron");
+          if( !(formdata.has("Sec") &&
+                formdata.has("Min") &&
+                formdata.has("Hours") &&
+                formdata.has("DayOfWeek") &&
+                formdata.has("Months") &&
+                formdata.has("DayOfMonth")) ) {
+            return ReturnError("Cron niet volledig!");
+          }
+        } else {
+          formdata.append("RunType", "Calendar");
+          if(cal.selectedDates == '') {
+            bulmaToast.toast({
+              message: "Geen datum gekozen!",
+              type: 'is-danger',
+              position: 'top-center'
+            });
+            return "Geen datum gekozen!";
+          }
+          formdata.append("Calendar", cal.selectedDates);
+        }
+        for (const pair of formdata) {
+            data.append(pair[0], pair[1]);
+        }
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/new/event');
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+        xhr.send(data);
+
+        xhr.onload = () => {
+            console.log(xhr.responseText);
+        }
+      });
+      function selectAll(elmt) {
+        elmt.selected = "";
+        this.ChangeTo = true;
+        this.obj = elmt;
+        if(elmt.dataset.select) {
+          delete elmt.dataset.select;
+          this.ChangeTo = "";
+        } else {
+          elmt.dataset.select = true;
+        }
+        options = elmt.parentElement;
+        for ( i=0; i<options.length; i++) {
+          if(options[i].value !== this.obj.value) {
+            options[i].selected = this.ChangeTo;
+          }
+        }
+      }
+      
+      function StateChange() {
+        if(document.getElementById("RunType").checked) {
+          document.getElementById("Cron").style.display = "";
+          document.getElementById("Calendar").style.display = "none";
+        } else {
+          document.getElementById("Calendar").style.display = "";
+          document.getElementById("Cron").style.display = "none";
+        }
+        if(document.getElementById("IRLedState").checked) {
+          document.getElementById("IRLed").style.display = "";
+        } else {
+          document.getElementById("IRLed").style.display = "none";
+        }
+        if(document.getElementById("RGBLedState").checked) {
+          document.getElementById("RGBLed").style.display = "";
+        } else {
+          document.getElementById("RGBLed").style.display = "none";
+        }
+      }
+      
+      var cal = flatpickr("#TimeSel", {
+        enableTime: true,
+        enableSeconds: true,
+        inline: true
+      });
+
+      var colorPicker = new iro.ColorPicker('#picker', {
+          layout: [{
+              component: iro.ui.Wheel,
+          },{
+              component: iro.ui.Slider,
+              options: {
+                  sliderType: 'red',
+              }
+          },{
+              component: iro.ui.Slider,
+              options: {
+                  sliderType: 'green',
+              }
+          },{
+              component: iro.ui.Slider,
+              options: {
+                  sliderType: 'blue',
+              }
+          },{
+              component: iro.ui.Slider,
+              options: {
+                  sliderType: 'value',
+              }
+          }],
+      });
+      colorPicker.on('color:change', SetRGB);
+
+      function SetRGB(action) {
+          document.getElementById("RGBValue").value = action.rgb.r+","+action.rgb.g+","+action.rgb.b;
+      }
     </script>
   </body>
 </html>

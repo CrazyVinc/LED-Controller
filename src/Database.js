@@ -17,7 +17,7 @@ const Ready = require('@serialport/parser-ready')
 var CronJob = require('cron');
 
 const { uuid } = require('uuidv4');
-const config = require('../config.js');
+const config = require('./ConfigManager.js');
 
 
 const DBStatus = {
@@ -34,9 +34,9 @@ const Queue = {
 };
 
 var connection = mysql.createPool({
-	host     : '192.168.1.253',
+	host     : "192.168.1.253",
 	user     : 'root',
-	password : 'vlg',
+	password : 'Joanna@13',
     waitForConnections: true,
 	database : 'ledcontroller',
 	queueLimit: 0,

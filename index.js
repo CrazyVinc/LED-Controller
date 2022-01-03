@@ -1,15 +1,18 @@
 const http = require('http');
 var path = require('path');
 const { log } = require('console');
+var cp = require("child_process");
 
 require('console-stamp')(console, '[HH:MM:ss.l]');
 
 var mysql = require('mysql2');
 
+const AutoUpdater = require('./src/AutoUpdater');
 const { socketConnection } = require('./src/SocketIO');
 const { pq, reset } = require("./src/Queue");
 const gradient = require('gradient-color');
 
+var hashFiles = require('hash-files');
 var express = require('express');
 var session = require('express-session');
 var MySQLStore = require('express-mysql-session')(session);
@@ -33,16 +36,19 @@ const {connection} = require("./src/Database");
 const CronJobs = require("./src/CronJobs");
 const { verify, randomUUID } = require('crypto');
 
-var config = require('./config');
+var config = require('./src/ConfigManager');
 
 
 var sessionStore = new MySQLStore({}, connection.promise());
 
 const app = express();
-
 const server = http.createServer(app);
 socketConnection(server);
-Arduino.Write("rgb 0");
+
+
+TimeOut = setTimeout(() => {
+  Arduino.Write("rgb 0");
+}, 3000);
 
 
 app.set('view engine', 'ejs');
@@ -97,6 +103,25 @@ var auth = async (req, res, next) => {
     return res.redirect('/');
   }
 };
+
+app.post('/update', async(req, res) => {
+  // if(req.body.hash !== undefined) {
+  //   res.send("No Hash received!");
+  //   return;
+  // }
+  await hashFiles({
+    "files":
+      [
+        "./src/**",
+        "./views/**",
+        "./routes/**",
+        "./assets/**",
+        "./package.json",
+      ]
+    }, async(error, hash) => {
+      res.send({hash: hash});
+    });
+});
 
 app.get('/', function(req, res) {
   if (req.session.loggedin || !config.config.options.Other.Auth) {
@@ -156,6 +181,7 @@ app.post('/modal/Calendar/:ID', auth, async(req, res) => {
   if(req.params.ID) {
     const [results, fields] = await connection.promise().query(
       'SELECT * FROM ledtimes WHERE `enabled`=\"true\"');
+      console.log(results);
     res.render('modal/Calendar', {"LEDS": results, Cron: CronJob, moment: moment, req: req});
   } else {
     console.log("?");
@@ -175,10 +201,13 @@ app.get('/test', async(req, res) => {
     res.send("stop");
     return;
   }
-  const colors = gradient.default([
-    'red',
-    'blue'
-  ], req.query.count || 10)
+  if(req.query.rgb !== undefined) {
+    Arduino.Write("rgb "+req.query.rgb);
+    res.send("rgb");
+    return;
+  }
+  console.log(req.query.colors);
+  const colors = gradient.default(req.query.colors.split(","), req.query.count || 10)
   var search = /([0-9]+), ([0-9]+), ([0-9]+)/;
 
   colors.forEach(color => {
@@ -188,9 +217,19 @@ app.get('/test', async(req, res) => {
   res.send(colors);
 });
 
+app.get('/test2', async(req, res) => {
+  for(let i = 0; i < 500; i++) {
+    Arduino.Write("power on");
+    Arduino.Write("power off");
+  };
+  res.send("a");
+});
+
 app.get('*', auth, function(req, res){
   res.status(404).render('errors', {error: {code: "404"}});
   // res.redirect("/home");
 });
 
-server.listen(3000);
+
+
+server.listen(8081);

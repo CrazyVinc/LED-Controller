@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <body>
-    <div class="container">
+    <div class="container"><%- moment(req.body.start).format("DD-MM-YYYY HH:mm:ss") %><br>
       <div class="columns">
         <div class="column is-four-fifths">
           <button class="button">Normal</button>
@@ -13,7 +13,8 @@
           <% } else { %>
             <button onclick="BlockTime(<%- req.params.ID %>, <%= JSON.stringify(req.body) %>)" class="button is-warning">Block this run</button>
           <% } %>
-          <button class="button is-danger">Delete CronJob</button>
+          <button class="button is-danger">Delete CronJob</button><br>
+          
         </div>
         <div class="column">
         </div>

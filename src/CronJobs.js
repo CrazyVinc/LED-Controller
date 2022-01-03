@@ -10,7 +10,7 @@ const axios = require('axios');
 const merge = require('deepmerge')
 
 const {connection, DBStatus, Queue} = require("./Database");
-const ConfigControl  = require("../config.js");
+const ConfigControl  = require("./ConfigManager.js");
 const Arduino = require("./ArduinoController");
 const { randomUUID, randomInt } = require('crypto');
 const { asyncForEach }  = require("./utils");
@@ -45,6 +45,14 @@ var LedTMP = {};
 //     })
 // }, null, true, null, null, true);
 
+/*new CronJob.CronJob('0 * * * * *', async () => {
+//console.log("Port closed?");
+    if(!Arduino.ArduinoPort.isOpen) {
+        Arduino.ArduinoPort.open();
+//        Arduino.ArduinoPort.open();
+        console.log("Port is closed! Reopening now!");
+    }
+}, null, true);*/
 
 var LED = new CronJob.CronJob('0 0 0 * * *', async () => {
     console.log('Waking Up...');
