@@ -1,6 +1,5 @@
 {
     "Name": "Led Controller",
     "URL": "https://led.vlgnl.ga/update",
-    "AutoUpdater": false,
-    "hash": "URLpathoftheupdate.phpfile"
+    "hash": "7d0545df404530f58bdf6ddf35c676dc90ae1bc9"
 }

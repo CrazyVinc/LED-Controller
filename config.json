@@ -1,4 +1,5 @@
 {
+  "AutoUpdater": false,
   "DB": {
     "hostname": "localhost",
     "user" : "root",

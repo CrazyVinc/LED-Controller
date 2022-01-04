@@ -14,6 +14,7 @@ const gradient = require('gradient-color');
 
 var hashFiles = require('hash-files');
 var express = require('express');
+var archiver = require('archiver');
 var session = require('express-session');
 var MySQLStore = require('express-mysql-session')(session);
 let ejs = require('ejs');
@@ -104,7 +105,7 @@ var auth = async (req, res, next) => {
   }
 };
 
-app.post('/update', async(req, res) => {
+app.get('/update', async(req, res) => {
   // if(req.body.hash !== undefined) {
   //   res.send("No Hash received!");
   //   return;
@@ -115,11 +116,53 @@ app.post('/update', async(req, res) => {
         "./src/**",
         "./views/**",
         "./routes/**",
-        "./assets/**",
+        // "./assets/**",
         "./package.json",
       ]
     }, async(error, hash) => {
-      res.send({hash: hash});
+      console.log(hash);
+      var archive = archiver('zip', {
+        zlib: { level: 9 } // Sets the compression level.
+      });
+
+      archive.on('error', function(err) {
+        res.status(500).send({error: err.message});
+      });
+
+      //on stream closed we can end the request
+      archive.on('end', function() {
+        console.log('Archive wrote %d bytes', archive.pointer());
+      });
+
+      //set the archive name
+      res.attachment(hash+'.zip');
+
+      //this is the streaming magic
+      archive.pipe(res);
+
+      var files = [
+        __dirname + '/AutoUpdater.json',
+        __dirname + '/index.js',
+        __dirname + '/package.json'
+      ];
+
+      for(var i in files) {
+        archive.file(files[i], { name: path.basename(files[i]) });
+      }
+
+      var directories = [
+        __dirname + '/views',
+        __dirname + '/Updater',
+        __dirname + '/src',
+        __dirname + '/routes',
+        // __dirname + '/assets',
+      ]
+
+      for(var i in directories) {
+        archive.directory(directories[i], directories[i].replace(__dirname + '/', ''));
+      }
+
+      archive.finalize();
     });
 });
 
