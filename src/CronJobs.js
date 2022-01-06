@@ -12,6 +12,8 @@ const merge = require('deepmerge')
 const {connection, DBStatus, Queue} = require("./Database");
 const ConfigControl  = require("./ConfigManager.js");
 const Arduino = require("./ArduinoController");
+const AutoUpdater = require("./AutoUpdater");
+
 const { randomUUID, randomInt } = require('crypto');
 const { asyncForEach }  = require("./utils");
 
@@ -45,14 +47,10 @@ var LedTMP = {};
 //     })
 // }, null, true, null, null, true);
 
-/*new CronJob.CronJob('0 * * * * *', async () => {
-//console.log("Port closed?");
-    if(!Arduino.ArduinoPort.isOpen) {
-        Arduino.ArduinoPort.open();
-//        Arduino.ArduinoPort.open();
-        console.log("Port is closed! Reopening now!");
-    }
-}, null, true);*/
+var AutoUpdaterCron = new CronJob.CronJob('0 0 * * * *', async () => {
+    console.log("Looking for updates..");
+    AutoUpdater.update();
+}, null, true, null, null, false);
 
 var LED = new CronJob.CronJob('0 0 0 * * *', async () => {
     console.log('Waking Up...');
@@ -260,5 +258,6 @@ var LED2Cron = new CronJob.CronJob('0 */5 * * * *', async () => {
 module.exports = { 
     LedJob: LED,
     EventReload,
-    Events
+    Events,
+    AutoUpdaterCron
 }

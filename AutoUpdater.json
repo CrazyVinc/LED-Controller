@@ -1,5 +1,1 @@
-{
-    "Name": "Led Controller",
-    "URL": "https://led.vlgnl.ga/update",
-    "hash": "7d0545df404530f58bdf6ddf35c676dc90ae1bc9"
-}
+{"Name":"Led Controller","URL":"https://led.vlgnl.ga/update","hash":"df7d6a9171893cc46d7d69253e00b1eccbe8c05d","FilesForHash":["./src/**","./views/**","./routes/**","./package.json","./index.js"]}

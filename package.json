@@ -2,8 +2,9 @@
   "name": "led-controller",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "Launcher.js",
   "scripts": {
+    "start": "Launcher.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
@@ -31,6 +32,7 @@
     "moment-strftime": "^0.5.0",
     "mysql2": "^2.3.0",
     "node-cron": "^3.0.0",
+    "prompt": "^1.2.0",
     "random": "^3.0.6",
     "rgb-color": "^2.1.2",
     "serialport": "^9.2.8",

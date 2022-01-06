@@ -2,91 +2,67 @@ package main
 
 import (
 	"archive/zip"
-	"fmt"
 	"io"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 )
 
-func unzipSource(source, destination string) error {
-	// 1. Open the zip file
-	reader, err := zip.OpenReader(source)
+func Unzip(source, destination string) error {
+	archive, err := zip.OpenReader(source)
 	if err != nil {
 		return err
 	}
-	defer reader.Close()
-
-	// 2. Get the absolute destination path
-	destination, err = filepath.Abs(destination)
-	if err != nil {
-		return err
-	}
-
-	// 3. Iterate over zip files inside the archive and unzip each of them
-	for _, f := range reader.File {
-		err := unzipFile(f, destination)
+	defer archive.Close()
+	for _, file := range archive.Reader.File {
+		reader, err := file.Open()
+		if err != nil {
+			return err
+		}
+		defer reader.Close()
+		path := filepath.Join(destination, file.Name)
+		// Remove file if it already exists; no problem if it doesn't; other cases can error out below
+		_ = os.Remove(path)
+		// Create a directory at path, including parents
+		err = os.MkdirAll(path, os.ModePerm)
+		if err != nil {
+			return err
+		}
+		// If file is _supposed_ to be a directory, we're done
+		if file.FileInfo().IsDir() {
+			continue
+		}
+		// otherwise, remove that directory (_not_ including parents)
+		err = os.Remove(path)
+		if err != nil {
+			return err
+		}
+		// and create the actual file.  This ensures that the parent directories exist!
+		// An archive may have a single file with a nested path, rather than a file for each parent dir
+		writer, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
+		if err != nil {
+			return err
+		}
+		defer writer.Close()
+		log.Printf(file.Name)
+		_, err = io.Copy(writer, reader)
 		if err != nil {
 			return err
 		}
 	}
-
 	return nil
 }
-
-func unzipFile(f *zip.File, destination string) error {
-	// 4. Check if file paths are not vulnerable to Zip Slip
-	filePath := filepath.Join(destination, f.Name)
-	if !strings.HasPrefix(filePath, filepath.Clean(destination)+string(os.PathSeparator)) {
-		return fmt.Errorf("invalid file path: %s", filePath)
-	}
-
-	// 5. Create directory tree
-	if f.FileInfo().IsDir() {
-		if err := os.MkdirAll(filePath, os.ModePerm); err != nil {
-			return err
-		}
-		log.Printf(f.Name)
-		return nil
-	}
-
-	if err := os.MkdirAll(filepath.Dir(filePath), os.ModePerm); err != nil {
-		return err
-	}
-
-	// 6. Create a destination file for unzipped content
-	destinationFile, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
-	if err != nil {
-		return err
-	}
-	defer destinationFile.Close()
-
-	// 7. Unzip the content of a file and copy it to the destination file
-	zippedFile, err := f.Open()
-	if err != nil {
-		return err
-	}
-	defer zippedFile.Close()
-
-	if _, err := io.Copy(destinationFile, zippedFile); err != nil {
-		return err
-	}
-	log.Printf(f.Name)
-	return nil
-}
-
 func main() {
 	log.Printf("Starting unzipping...")
-	err := unzipSource("./temp/update.zip", "./")
+	err := Unzip("./temp/update.zip", "./")
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Printf("npm installing...")
 
 	cmd := exec.Command("npm", "install")
-	cmd.Dir = "./temp"
+	cmd.Dir = "./"
 
 	out, err := cmd.Output()
 	if err != nil {

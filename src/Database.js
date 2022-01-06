@@ -1,3 +1,4 @@
+var fs = require('fs');
 var path = require('path');
 const { log } = require('console');
 
@@ -17,7 +18,7 @@ const Ready = require('@serialport/parser-ready')
 var CronJob = require('cron');
 
 const { uuid } = require('uuidv4');
-const config = require('./ConfigManager.js');
+const {config} = require('./ConfigManager.js');
 
 
 const DBStatus = {
@@ -34,14 +35,13 @@ const Queue = {
 };
 
 var connection = mysql.createPool({
-	host     : "192.168.1.253",
-	user     : 'root',
-	password : 'Joanna@13',
-    waitForConnections: true,
-	database : 'ledcontroller',
+	host     : config.options.DB.hostname,
+	user     : config.options.DB.user,
+	password : config.options.DB.password,
+	database : config.options.DB.database,
+	waitForConnections: true,
 	queueLimit: 0,
 });
-
 module.exports = {
     connection,
 	Queue,

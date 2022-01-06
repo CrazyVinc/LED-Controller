@@ -10,12 +10,13 @@ const Readline = require('@serialport/parser-readline');
 const Ready = require('@serialport/parser-ready');
 
 const { pq } = require("./Queue");
+const {config} = require('./ConfigManager.js');
 
 
-const ArduinoPort = new SerialPort('/dev/ttyUSB0', {
+const ArduinoPort = new SerialPort(config.options.SerialPort, {
     baudRate : 9600,
-    parity:        'none',
-    autoOpen: true,
+    parity:   'none',
+    autoOpen:  true,
 });
 
 // const parser = ArduinoPort.pipe(new Readline({ delimiter: '\n' }));
@@ -35,7 +36,6 @@ ArduinoPort.on('close', (e) => {
 })
 
 function ArduinoWrite(data) {
-    // data = data+"\n";
     var tmp = 100;
     let timeout;
     pq.add(() => {

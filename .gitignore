@@ -6,3 +6,5 @@ node_modules
 package-lock.json
 errors.txt
 nodemon.json
+temp/update.zip
+config.json

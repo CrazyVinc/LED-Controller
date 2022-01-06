@@ -1,5 +1,6 @@
 const http = require('http');
 var path = require('path');
+var fs = require('fs');
 const { log } = require('console');
 var cp = require("child_process");
 
@@ -22,10 +23,6 @@ var bodyParser = require('body-parser');
 
 var moment = require('moment');
 
-const SerialPort = require('serialport');
-const Readline = require('@serialport/parser-readline');
-const Ready = require('@serialport/parser-ready')
-
 var CronJob = require('cron');
 var CronVerify = require('cron-validate');
 
@@ -39,6 +36,10 @@ const { verify, randomUUID } = require('crypto');
 
 var config = require('./src/ConfigManager');
 
+
+process.on("message", function (message) {
+  console.log(`Message from main.js: ${message}`);
+});
 
 var sessionStore = new MySQLStore({}, connection.promise());
 
@@ -105,65 +106,66 @@ var auth = async (req, res, next) => {
   }
 };
 
-app.get('/update', async(req, res) => {
+app.post('/update', async(req, res) => {
   // if(req.body.hash !== undefined) {
   //   res.send("No Hash received!");
   //   return;
   // }
   await hashFiles({
-    "files":
-      [
-        "./src/**",
-        "./views/**",
-        "./routes/**",
-        // "./assets/**",
-        "./package.json",
-      ]
+    "files": config.AutoUpdater.options.FilesForHash
     }, async(error, hash) => {
-      console.log(hash);
-      var archive = archiver('zip', {
-        zlib: { level: 9 } // Sets the compression level.
+      config.AutoUpdater.options.hash = hash;
+      fs.writeFile('./AutoUpdater.json', JSON.stringify(config.AutoUpdater.options), function (err) {
+        if (err) throw err;
+        console.log('AutoUpdater.json is updated!');
+        // config.ReloadUpdater();
       });
-
-      archive.on('error', function(err) {
-        res.status(500).send({error: err.message});
-      });
-
-      //on stream closed we can end the request
-      archive.on('end', function() {
-        console.log('Archive wrote %d bytes', archive.pointer());
-      });
-
-      //set the archive name
-      res.attachment(hash+'.zip');
-
-      //this is the streaming magic
-      archive.pipe(res);
-
-      var files = [
-        __dirname + '/AutoUpdater.json',
-        __dirname + '/index.js',
-        __dirname + '/package.json'
-      ];
-
-      for(var i in files) {
-        archive.file(files[i], { name: path.basename(files[i]) });
-      }
-
-      var directories = [
-        __dirname + '/views',
-        __dirname + '/Updater',
-        __dirname + '/src',
-        __dirname + '/routes',
-        // __dirname + '/assets',
-      ]
-
-      for(var i in directories) {
-        archive.directory(directories[i], directories[i].replace(__dirname + '/', ''));
-      }
-
-      archive.finalize();
+      res.send({hash: hash});
     });
+});
+
+app.get('/update', async(req, res) => {
+    var archive = archiver('zip', {
+      zlib: { level: 9 } // Sets the compression level.
+    });
+
+    archive.on('error', function(err) {
+      res.status(500).send({error: err.message});
+    });
+
+    //on stream closed we can end the request
+    archive.on('end', function() {
+      console.log('Archive wrote %d bytes', archive.pointer());
+    });
+
+    //set the archive name
+    res.attachment('update.zip');
+
+    //this is the streaming magic
+    archive.pipe(res);
+
+    var files = [
+      __dirname + '/AutoUpdater.json',
+      __dirname + '/index.js',
+      __dirname + '/package.json'
+    ];
+
+    for(var i in files) {
+      archive.file(files[i], { name: path.basename(files[i]) });
+    }
+
+    var directories = [
+      __dirname + '/views',
+      __dirname + '/src',
+      __dirname + '/routes',
+      __dirname + '/assets',
+    ]
+
+    for(var i in directories) {
+      archive.directory(directories[i], directories[i].replace(__dirname + '/', ''));
+    }
+
+    archive.finalize();
 });
 
 app.get('/', function(req, res) {
@@ -275,4 +277,4 @@ app.get('*', auth, function(req, res){
 
 
 
-server.listen(8081);
+server.listen(config.config.options.port);
