@@ -21,7 +21,7 @@ let Localhash = AutoUpdater.hash;
 
 async function init2() {
     if(require.main !== module) {
-        if(!config.options.AutoUpdater) {
+        if(!config.get().AutoUpdater) {
             console.log("AutoUpdate is disabled in the config");
             console.log("Canceling cronjob!");
             AutoUpdaterCron.stop();
@@ -46,6 +46,9 @@ async function init2() {
 
     if(Remotehash == Localhash) {
         console.log("Uptodate!");
+        return;
+    } else if(Remotehash == null) {
+        console.log("The update server is at this moment not stable to provide you a update.");
         return;
     } else {
         console.log("Update found!");

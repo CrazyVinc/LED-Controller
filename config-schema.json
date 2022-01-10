@@ -1,0 +1,71 @@
+{
+    "SerialPort": {
+        "doc": "The Serialbind bind.",
+        "format": "*",
+        "default": "null",
+        "env": "SERIAL",
+        "arg": "serial"
+    },
+    "AutoUpdater": {
+        "doc": "Enable the auto updater?",
+        "format": "Boolean",
+        "default": "true",
+        "env": "AU",
+        "arg": "au"
+    },
+    "port": {
+        "doc": "The port to bind.",
+        "format": "port",
+        "default": 8080,
+        "env": "PORT",
+        "arg": "port"
+    },
+    "DB": {
+        "hostname": {
+            "doc": "Database hostname/IP",
+            "format": "String",
+            "default": "localhost"
+        },
+        "user": {
+            "doc": "Database Username",
+            "format": "String",
+            "default": "root"
+        },
+        "password": {
+            "doc": "Database password",
+            "format": "String",
+            "default": ""
+        },
+        "database": {
+            "doc": "Database name",
+            "format": "String",
+            "default": "ledcontroller"
+        }
+    },
+    "LEDs": {
+        "Single": {
+            "doc": "Define the command used to control the led",
+            "format": "Array",
+            "nullable": true,
+            "default": []
+        },
+        "RGB": {
+            "doc": "Define the command used to control that RGB led",
+            "format": "Array",
+            "nullable": true,
+            "default": []
+        }
+    },
+    "Other": {
+        "Auth": {
+            "doc": "Users with write access, or null to grant full access without login.",
+            "format": "Boolean",
+            "default": true
+        },
+        "UpdateServer": {
+            "doc": "Enable Update Server",
+            "format": "Boolean",
+            "default": false
+        }
+    }
+}

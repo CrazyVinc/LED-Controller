@@ -81,24 +81,15 @@ var Events = {};
 var Events2 = {};
 var JobsInit = {};
 
-var EventReload = new CronJob.CronJob('*/30 * * * * *', async () => {
-    ConfigControl.ReloadConfig()
-    var options = ConfigControl.config.options;
+var EventReload = new CronJob.CronJob('0 * * * * *', async () => {
+    ConfigControl.config.reload();
+    var options = ConfigControl.config.get();
     asyncForEach(Object.entries(options.Events), async (Event) => {
         if(!([Event[0]] in JobsInit)) {
             JobsInit[Event[0]] = {"init": false};
         }
         if(Event[1].enabled) {
             if(Events[Event[0]] === undefined) {
-                // if(Event[1].criteria.API.type === "JSON") {
-                //     if(Event[1].criteria.if !== undefined) {
-                //         if((Event[1].criteria.if).includes('>=')) {
-                //             var CriteriaIF = (Event[1].criteria.if).split(" >=");
-                //             console.log(-1, Cr iteriaIF[0], response.data[(CriteriaIF[0])]);
-                //             results.sunset >= {$TimeNow}
-                //         }
-                //     }
-                // }
                 TMP = merge(TMP, {
                     "RunTimeCalc": {
                         [Event[0]]: {

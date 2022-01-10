@@ -13,7 +13,7 @@ const { pq } = require("./Queue");
 const {config} = require('./ConfigManager.js');
 
 
-const ArduinoPort = new SerialPort(config.options.SerialPort, {
+const ArduinoPort = new SerialPort(config.get().SerialPort, {
     baudRate : 9600,
     parity:   'none',
     autoOpen:  true,
@@ -31,13 +31,49 @@ ArduinoPort.on('error', (e) => console.log('boo we had an error!', e))
 ArduinoPort.on('close', (e) => {
     setTimeout(() => {
         ArduinoPort.open();
-    }, 2000);
+    }, 5000);
     console.log('Port Closed!', e)
 })
 
-function ArduinoWrite(data) {
-    var tmp = 100;
-    let timeout;
+let LastDataJSON;
+if(!fs.existsSync('LastData.json')) {
+    LastDataJSON = {
+        LED1: {
+            cmd: ""
+        },
+        LED2: {
+            cmd: ""
+        }
+    };
+
+    fs.writeFile('LastData.json', JSON.stringify(LastDataJSON), function (err) {
+        if (err) throw err;
+        console.log('Replaced!');
+    });
+} else {
+    LastDataJSON = fs.readFileSync('LastData.json');
+    LastDataJSON = JSON.parse(LastDataJSON);
+}
+
+function LastData(data) {
+    if(data == "power on") {
+        LastDataJSON.LED1["cmd"] = "power on";
+    } else if(data == "power off") {
+        LastDataJSON.LED1["cmd"] = "power off";
+    } else if((data+"").startsWith("rgb ")) {
+        LastDataJSON.LED2["cmd"] = data;
+    } else {
+        return;
+    }
+    fs.writeFile('LastData.json', JSON.stringify(LastDataJSON), function (err) {
+        if (err) console.warn(err);
+      });
+}
+
+function ArduinoWrite(data, init) {
+    if(data === undefined) return;
+    if(init === undefined) init = false; // Old code support!
+    var tmp = 75;
     pq.add(() => {
         return new Promise(function(resolve, reject) {
             ws().emit("QueueCount", pq.waitingCount);
@@ -50,9 +86,12 @@ function ArduinoWrite(data) {
                 ws().emit("response", "Reconnecting!");
             }
             setTimeout(() => {
-                ArduinoPort.write(data, (te) => {
-                    if(te) {
-                        console.log(te, 03);
+                if(!init){
+                    LastData(data);
+                }
+                ArduinoPort.write(data, (err) => {
+                    if(err) {
+                        console.log(err, 03);
                     }
                     // var parsr = parser.once('readable', () => {
                     //     res=parser.read() || "Nothing!";
@@ -63,16 +102,16 @@ function ArduinoWrite(data) {
                     //     //         console.log('Error code saved!');
                     //     //     });
                     //     // }
-                    //     ws().emit("response", (res).slice(0,-1));
+                        ws().emit("response", data);
                         // clearTimeout(timeout);
                         resolve();
                     // });
-                    console.log('IR written: ' + data);
+                    console.log('IR written:', data);
                     // timeout = setTimeout(() => {
                         // ArduinoPort.close();
                         // parsr.emit('readable', "WARNING: Timed out!");
                     // }, 10000);
-                    if(tmp !== 100) console.log("Resume!");
+                    if(tmp !== 75) console.log("Resume!");
                 });
             }, tmp);
         });
@@ -109,11 +148,10 @@ async function Brightness(level) {
         count = 1;
         await Shortcuts("lowest");
         
-        console.log(level, 5748)
+        console.log("Level: ", level)
         while (count <= level) {
             count++;
             await ArduinoWrite("bright up");
-            console.log(count);
         }
     } else {
         count = 5;
@@ -122,7 +160,6 @@ async function Brightness(level) {
         while (level <= count) {
             count = count - 1;
             await ArduinoWrite("bright down");
-            console.log("Count: ", count);
         }
     }
 }

@@ -6,6 +6,8 @@ var cp = require("child_process");
 
 require('console-stamp')(console, '[HH:MM:ss.l]');
 
+var config = require('./src/ConfigManager');
+
 var mysql = require('mysql2');
 
 const AutoUpdater = require('./src/AutoUpdater');
@@ -34,8 +36,6 @@ const {connection} = require("./src/Database");
 const CronJobs = require("./src/CronJobs");
 const { verify, randomUUID } = require('crypto');
 
-var config = require('./src/ConfigManager');
-
 
 process.on("message", function (message) {
   console.log(`Message from main.js: ${message}`);
@@ -49,8 +49,14 @@ socketConnection(server);
 
 
 TimeOut = setTimeout(() => {
-  Arduino.Write("rgb 0");
-}, 3000);
+  let LastDataJSON = fs.readFileSync('LastData.json');
+  LastDataJSON = JSON.parse(LastDataJSON);
+  Object.keys(LastDataJSON).forEach(function(key) {
+    var LED = LastDataJSON[key];
+    console.log(0, LED.cmd);
+    Arduino.Write(LED.cmd, true)
+  });
+}, 2500);
 
 
 app.set('view engine', 'ejs');
@@ -67,7 +73,7 @@ app.use(bodyParser.json());
 app.use('/assets', express.static('assets'));
 // Authentication and Authorization Middleware
 var auth = async (req, res, next) => {
-  if(!config.config.options.Other.Auth) {
+  if(!config.config.get().Other.Auth) {
     if (!req.session.loggedin) {
       req.session.loggedin = true;
       req.session.CheckFree = 3;
@@ -111,17 +117,21 @@ app.post('/update', async(req, res) => {
   //   res.send("No Hash received!");
   //   return;
   // }
-  await hashFiles({
-    "files": config.AutoUpdater.options.FilesForHash
-    }, async(error, hash) => {
+  if(config.config.get('Other.UpdateServer')) {
+    await hashFiles({
+      "files": config.AutoUpdater.options.FilesForHash
+      }, async(error, hash) => {
       config.AutoUpdater.options.hash = hash;
       fs.writeFile('./AutoUpdater.json', JSON.stringify(config.AutoUpdater.options), function (err) {
         if (err) throw err;
         console.log('AutoUpdater.json is updated!');
-        // config.ReloadUpdater();
+        config.ReloadUpdater();
       });
       res.send({hash: hash});
     });
+  } else {
+    res.send({hash: null, UpdateServer: false});
+  }
 });
 
 app.get('/update', async(req, res) => {
@@ -147,6 +157,7 @@ app.get('/update', async(req, res) => {
     var files = [
       __dirname + '/AutoUpdater.json',
       __dirname + '/index.js',
+      __dirname + '/config-schema.json',
       __dirname + '/package.json'
     ];
 
@@ -169,7 +180,7 @@ app.get('/update', async(req, res) => {
 });
 
 app.get('/', function(req, res) {
-  if (req.session.loggedin || !config.config.options.Other.Auth) {
+  if (req.session.loggedin || !config.config.get().Other.Auth) {
     res.redirect('/home');
 	} else {
 	  res.render('login');
@@ -275,6 +286,7 @@ app.get('*', auth, function(req, res){
   // res.redirect("/home");
 });
 
-
-
-server.listen(config.config.options.port);
+app.set('port', config.config.get().port);
+server.listen(app.get('port'), () => {
+  console.log("The LEDController server is running on port:", app.get("port"))
+});

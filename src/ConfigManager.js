@@ -1,16 +1,17 @@
 const fs = require('fs');
+var convict = require('convict');
+var config = convict("./config-schema.json");
+config.loadFile('./config.json');
+config.validate();
 
-const config = {
-	options: {},
-	set new(name) {
-		this.options = name;
-	},
+config.SaveSet = function() {
+	fs.writeFile('config.json', config.toString(), function (err) {
+		if (err) console.warn(err);
+	});
 };
 
-async function ReloadConfig() {
-	let rawdata;
-	rawdata = fs.readFileSync('./config.json');
-	config.new = JSON.parse(rawdata);
+config.reload = function() {
+	config.loadFile('./config.json');
 }
 
 const AutoUpdater = {
@@ -25,10 +26,8 @@ function ReloadUpdater() {
     AutoUpdater.new = JSON.parse(rawdata);
 }
 
-
-ReloadConfig();
 ReloadUpdater();
 module.exports = {
-	config, ReloadConfig,
+	config,
 	AutoUpdater, ReloadUpdater
 }
