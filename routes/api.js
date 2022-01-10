@@ -52,21 +52,19 @@ app.post('/SendLedCommand', async (req, res) => {
   res.send(req.body);
 });*/
 
-// app.ws('/SendLedCommand', async (ws, req) => {
-  ws().on('connection', async (socket) => {
-    socket.on('action', async (msg) => {
-      if(msg == "__ping__") return;
-      msg = JSON.parse(msg);
-      if(msg.shortcut) {
-        if((msg.shortcut).startsWith("Brightness")) {
-          await Arduino.Brightness((msg.shortcut).split('|')[1])
-        }
-      } else {
-        await Arduino.Write(msg.action);
+ws().on('connection', async (socket) => {
+  socket.on('action', async (msg) => {
+    if(msg == "__ping__") return;
+    msg = JSON.parse(msg);
+    if(msg.shortcut) {
+      if((msg.shortcut).startsWith("Brightness")) {
+        await Arduino.Brightness((msg.shortcut).split('|')[1])
       }
-    });
+    } else {
+      await Arduino.Write(msg.action, false, msg.LED);
+    }
   });
-// });
+});
 
   app.post('/blocktime/:ID', async (req, res) => {
     if(req.params.ID) {

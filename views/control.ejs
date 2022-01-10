@@ -1,4 +1,6 @@
-<!DOCTYPE html>
+<% 
+var LEDControllers = 0;
+%> <!DOCTYPE html>
 <html>
 	<head>
         <%- include("./includes/head.ejs", {Page: "Home"}) %>
@@ -27,60 +29,74 @@
                             <i class="fa-solid fa-power-off"></i>
                         </span>
                         <div class="buttons has-addons">
-                            <button onclick="LedAction('power on')" class="button is-success">On</button>
-                            <button onclick="socket.emit('Queue', 'reset'); LedAction('power off'); SetRGB({rgb: {r:0,g:0,b:0}});"  class="button is-danger">Off</button>
+                            <button onclick="<%
+                            LEDs.IRRGB.forEach(LED => {
+                                %>LedAction('<%- LED %>', 'power on');<%
+                            });
+                            LEDs.RGB.forEach(LED => {
+                                %>LedAction('<%- LED %>', 'RGB 255,255,255');<%
+                            });
+                            LEDs.Single.forEach(LED => {
+                                %>LedAction('<%- LED %>', 'power on');<%
+                            }); %>" class="button is-success">On</button>
+                            <button onclick="socket.emit('Queue', 'reset');<%
+                            LEDs.IRRGB.forEach(LED => {
+                                %>LedAction('<%- LED %>', 'power off');<%
+                            });
+                            LEDs.RGB.forEach(LED => {
+                                %>LedAction('<%- LED %>', 'RGB 0,0,0');<%
+                            });
+                            LEDs.Single.forEach(LED => {
+                                %>LedAction('<%- LED %>', 'power off');<%
+                            }); %>" class="button is-danger">Off</button>
                         </div>
                     </div>
                 </div>
-                <div class="column">
-                    <div onclick="LedAction('Brightness|'+document.getElementById('sliderWithValue').value, true)" class="button is-success">Set Level</div>
-                    <!-- document.getElementById("sliderWithValue").value -->
-                    <input id="sliderWithValue" class="slider has-output is-fullwidth" min="0" max="6" value="3" step="1" type="range">
-                    <output for="sliderWithValue">3</output>
-                </div>
+            </div>
+            <div class="columns"><%
+            var Controls = 0;
+            LEDs.IRRGB.forEach(IR => {
+                LEDControllers++
+                Controls++
+                if(Controls > 2) {
+                    Controls = 0;
+                %>
             </div>
             <div class="columns">
                 <div class="column">
-                    <div style="margin-bottom: -0.5rem;" class="buttons has-addons">
-                        <button onclick="LedAction('bright up')" class="button"><i class="fas fa-arrow-circle-up"></i></button>
-                        <button onclick="LedAction('bright down')" class="button"><i class="fas fa-arrow-circle-down"></i></button>
-                        <button onclick="LedAction('power off');" class="button"><i class="fas fa-lightbulb-slash"></i></button>
-                        <button onclick="LedAction('power on')" class="button"><i class="fas fa-lightbulb-on"></i></button>
-                    </div>
-                    <div style="margin-bottom: -0.5rem;" class="buttons has-addons">
-                        <button onclick="LedAction('color red')" style="color:Red" class="button"><i class="fas fa-tint"></i></button>
-                        <button onclick="LedAction('color green')" style="color:green" class="button"><i class="fas fa-tint"></i></button>
-                        <button onclick="LedAction('color blue')" style="color:blue" class="button"><i class="fas fa-tint"></i></button>
-                        <button onclick="LedAction('color white')" style="background-color:lightslategray; color:white" class="button"><i class="fas fa-tint"></i></button>
-                    </div>
-                    <div style="margin-bottom: -0.5rem;" class="buttons has-addons">
-                        <button onclick="LedAction('color scarlet')" style="color:Scarlet" class="button"><i class="fas fa-tint"></i></button>
-                        <button onclick="LedAction('color Light Green')" style="color:lightgreen" class="button"><i class="fas fa-tint"></i></button>
-                        <button onclick="LedAction('color periwinkle')" style="color:#CCCCFF" class="button"><i class="fas fa-tint"></i></button>
-                        <button onclick="LedAction('mode flash')" style="background-color:lightslategray" class="button">Flash</button>
-                    </div>
-                    <div style="margin-bottom: -0.5rem;" class="buttons has-addons">
-                        <button onclick="LedAction('color orange')" style="color:Orange" class="button"><i class="fas fa-tint"></i></button>
-                        <button onclick="LedAction('color mint')" style="color:springgreen" class="button"><i class="fas fa-tint"></i></button>
-                        <button onclick="LedAction('color purple')" style="color:purple" class="button"><i class="fas fa-tint"></i></button>
-                        <button onclick="LedAction('mode strobe')" style="background-color:lightslategray" class="button">Strobe</button>
-                    </div>
-                    <div style="margin-bottom: -0.5rem;" class="buttons has-addons">
-                        <button onclick="LedAction('color tangerine')" style="color:#F28500" class="button"><i class="fas fa-tint"></i></button>
-                        <button onclick="LedAction('color sky')" style="color:skyblue" class="button"><i class="fas fa-tint"></i></button>
-                        <button onclick="LedAction('color Rose')" style="color:#FF0080" class="button"><i class="fas fa-tint"></i></button>
-                        <button onclick="LedAction('mode fade')" style="background-color:lightslategray" class="button">Fade</button>
-                    </div>
-                    <div style="margin-bottom: -0.5rem;" class="buttons has-addons">
-                        <button onclick="LedAction('color yellow')" style="color:yellow" class="button"><i class="fas fa-tint"></i></button>
-                        <button onclick="LedAction('color aqua')" style="color:aqua" class="button"><i class="fas fa-tint"></i></button>
-                        <button onclick="LedAction('color pink')" style="color:pink" class="button"><i class="fas fa-tint"></i></button>
-                        <button onclick="LedAction('mode smooth')" style="background-color:lightslategray" class="button">Smooth</button>
-                    </div>
-                </div>
+                    <% } else { %>
                 <div class="column">
-                    <div id="picker"></div>
-                </div>
+                    <% } %><%- include("LED/IR.ejs", {"Name": IR, ID: LEDControllers}); %>
+                </div><%
+            }); %><%
+            LEDs.RGB.forEach(IR => {
+                LEDControllers++
+                Controls++
+                if(Controls > 2) {
+                    Controls = 0;
+                %>
+            </div>
+            <div class="columns">
+                <div class="column">
+                    <% } else { %>
+                <div class="column">
+                    <% } %><%- include("LED/RGB.ejs", {"Name": IR, ID: LEDControllers}); %>
+                </div><%
+            });
+            LEDs.Single.forEach(IR => {
+                LEDControllers++
+                Controls++
+                if(Controls > 2) {
+                    Controls = 0;
+                %>
+            </div>
+            <div class="columns">
+                <div class="column">
+                    <% } else { %>
+                <div class="column">
+                    <% } %><%- include("LED/Single.ejs", {"Name": IR, ID: LEDControllers}); %>
+                </div><%
+            }); %>
             </div>
         </div>
         <footer class="footer" style="position: sticky;bottom:0px;">
@@ -91,61 +107,32 @@
                 </p>
             </div>
         </footer>
-        <script>
-            var colorPicker = new iro.ColorPicker('#picker', {
-                // wheelLightness: true,
-                layout: [{
-                    component: iro.ui.Wheel,
-                },{
-                    component: iro.ui.Slider,
-                    options: {
-                        sliderType: 'red',
-                    }
-                },{
-                    component: iro.ui.Slider,
-                    options: {
-                        sliderType: 'green',
-                    }
-                },{
-                    component: iro.ui.Slider,
-                    options: {
-                        sliderType: 'blue',
-                    }
-                },{
-                    component: iro.ui.Slider,
-                    options: {
-                        sliderType: 'value',
-                    }
-                }],
-                // layoutDirection: "horizontal",
-            });
-            colorPicker.on('color:change', SetRGB);
-
-            function SetRGB(action) {
-                console.log(action);
+            <script>
+            function SetRGB(LED, RGB) {
                 socket.emit("action", JSON.stringify({
-                    action: 'rgb '+action.rgb.r+','+action.rgb.g+','+action.rgb.b,
+                    action: LED+' RGB '+RGB.r+','+RGB.g+','+RGB.b,
+                    LED: "RGB",
                     shortcut: false
                 }));
             }
 
-            function LedAction(action, shortcut = false) {
+            function LedAction(LED, action, shortcut = false) {
                 if(shortcut) {
                     socket.emit("action", JSON.stringify({
-                        shortcut: action
+                        LED: "IR",
+                        shortcut: LED+action
                     }));
                 } else {
                     socket.emit("action", JSON.stringify({
-                        action: action
+                        LED: "IR",
+                        action: LED+" "+action
                     }));
                 }
             }
             socket.on("response", data => {
                 document.getElementById("RGBColor").innerHTML = data
-                console.log("a 34wb ", data);
             });
             socket.on("QueueCount", data => {
-                // console.log("a 34wb ", data);
                 document.getElementById("QueueCount").innerHTML = data
             });
             </script>

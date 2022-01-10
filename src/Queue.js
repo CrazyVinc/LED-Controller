@@ -1,20 +1,28 @@
 const PromiseQueue = require("easy-promise-queue").default;
 var {ws} = require('./SocketIO');
-let pq = new PromiseQueue({concurrency: 1});
+let IR = new PromiseQueue({concurrency: 1});
+let RGB = new PromiseQueue({concurrency: 1});
+let Single = new PromiseQueue({concurrency: 1});
+let general = new PromiseQueue({concurrency: 1});
 
 setTimeout(() => {
     ws().on('connection', (socket) => {
         socket.on('Queue', (msg) => {
             console.log(msg, 93);
-            if(msg == "reset") pq._queue = [];
-            console.log(pq._queue);
+            if(msg == "reset") {
+                IR._queue = [];
+                RGB._queue = [];
+                Single._queue = [];
+            }
         });
     });
-    // console.log(ws().sockets);
 }, 0);
 
 
 
 module.exports = {
-    pq: pq,
+    IR,
+    RGB,
+    Single,
+    general
 }

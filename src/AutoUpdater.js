@@ -151,9 +151,6 @@ if(require.main === module || !fs.existsSync('./config.json')) {
                 }
                 }
             }
-            },
-            "Other": {
-                "Auth": true
             }
         });
         fs.writeFile('./config.json', rawdata, err => {

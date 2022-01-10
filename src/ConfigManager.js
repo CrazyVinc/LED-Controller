@@ -4,7 +4,12 @@ var config = convict("./config-schema.json");
 config.loadFile('./config.json');
 config.validate();
 
-config.SaveSet = function() {
+config.save = function() {
+	fs.writeFile('config.json', config.toString(), function (err) {
+		if (err) console.warn(err);
+	});
+};
+config.saveSet = function() {
 	fs.writeFile('config.json', config.toString(), function (err) {
 		if (err) console.warn(err);
 	});
@@ -14,6 +19,13 @@ config.reload = function() {
 	config.loadFile('./config.json');
 }
 
+config.SaveReload = function() {
+	fs.writeFile('config.json', config.toString(), function (err) {
+		if (err) console.warn(err);
+		config.loadFile('./config.json');
+	});
+}
+//config.save();
 const AutoUpdater = {
 	options: {},
 	set new(name) {

@@ -1,6 +1,6 @@
 {
     "SerialPort": {
-        "doc": "The Serialbind bind.",
+        "doc": "The port of the Serialbind.",
         "format": "*",
         "default": "null",
         "env": "SERIAL",
@@ -44,21 +44,24 @@
     },
     "LEDs": {
         "Single": {
-            "doc": "Define the command used to control the led",
+            "doc": "Define the command used to control the LED",
             "format": "Array",
-            "nullable": true,
             "default": []
         },
         "RGB": {
-            "doc": "Define the command used to control that RGB led",
+            "doc": "Define the command used to control that RGB LED",
             "format": "Array",
-            "nullable": true,
+            "default": []
+        },
+        "IRRGB": {
+            "doc": "Define the command used to control the specific IR LED",
+            "format": "Array",
             "default": []
         }
     },
     "Other": {
         "Auth": {
-            "doc": "Users with write access, or null to grant full access without login.",
+            "doc": "Enable the inlog system",
             "format": "Boolean",
             "default": true
         },

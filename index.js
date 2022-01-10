@@ -12,7 +12,6 @@ var mysql = require('mysql2');
 
 const AutoUpdater = require('./src/AutoUpdater');
 const { socketConnection } = require('./src/SocketIO');
-const { pq, reset } = require("./src/Queue");
 const gradient = require('gradient-color');
 
 var hashFiles = require('hash-files');
@@ -46,18 +45,6 @@ var sessionStore = new MySQLStore({}, connection.promise());
 const app = express();
 const server = http.createServer(app);
 socketConnection(server);
-
-
-TimeOut = setTimeout(() => {
-  let LastDataJSON = fs.readFileSync('LastData.json');
-  LastDataJSON = JSON.parse(LastDataJSON);
-  Object.keys(LastDataJSON).forEach(function(key) {
-    var LED = LastDataJSON[key];
-    console.log(0, LED.cmd);
-    Arduino.Write(LED.cmd, true)
-  });
-}, 2500);
-
 
 app.set('view engine', 'ejs');
 app.use(session({
@@ -99,9 +86,6 @@ var auth = async (req, res, next) => {
         req.session.CheckFree = 3;
         return next();
       } else {
-        console.log(000, req.session.CheckFree);
-        req.session.CheckFree--;
-        console.log(-1, req.session.CheckFree);
         return next();
       }
     } else {
@@ -187,6 +171,11 @@ app.get('/', function(req, res) {
   }
 });
 
+app.get('/reload', auth, function(req, res) {
+  config.config.reload();
+  res.send("Config is now reloaded! Going back in 3 seconds...<script>setTimeout(() => { if ('referrer' in document) { window.location = document.referrer; } else { window.history.back(); } }, 3000);</script>");
+});
+
 app.post('/auth', function(request, response) {
 	var username = request.body.username;
 	var password = request.body.password;
@@ -211,7 +200,7 @@ app.post('/auth', function(request, response) {
 });
 
 app.get('/home', auth, async (req, res) => {
-  res.render('control')
+  res.render('control', {LEDs: config.config.get("LEDs")})
 });
 
 app.use('/new', auth, require("./routes/new"));
@@ -273,12 +262,12 @@ app.get('/test', async(req, res) => {
   res.send(colors);
 });
 
-app.get('/test2', async(req, res) => {
+app.get('/test2', auth, async(req, res) => {
   for(let i = 0; i < 500; i++) {
     Arduino.Write("power on");
     Arduino.Write("power off");
   };
-  res.send("a");
+  res.send("");
 });
 
 app.get('*', auth, function(req, res){

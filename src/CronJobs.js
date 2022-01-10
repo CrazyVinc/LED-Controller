@@ -81,7 +81,7 @@ var Events = {};
 var Events2 = {};
 var JobsInit = {};
 
-var EventReload = new CronJob.CronJob('0 * * * * *', async () => {
+var EventReload = new CronJob.CronJob('0 */5 * * * *', async () => {
     ConfigControl.config.reload();
     var options = ConfigControl.config.get();
     asyncForEach(Object.entries(options.Events), async (Event) => {
