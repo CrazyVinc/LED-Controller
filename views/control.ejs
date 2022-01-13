@@ -53,50 +53,21 @@ var LEDControllers = 0;
                     </div>
                 </div>
             </div>
-            <div class="columns"><%
-            var Controls = 0;
-            LEDs.IRRGB.forEach(IR => {
-                LEDControllers++
-                Controls++
-                if(Controls > 2) {
-                    Controls = 0;
-                %>
-            </div>
             <div class="columns">
-                <div class="column">
-                    <% } else { %>
-                <div class="column">
-                    <% } %><%- include("LED/IR.ejs", {"Name": IR, ID: LEDControllers}); %>
-                </div><%
-            }); %><%
-            LEDs.RGB.forEach(IR => {
-                LEDControllers++
-                Controls++
-                if(Controls > 2) {
-                    Controls = 0;
-                %>
-            </div>
-            <div class="columns">
-                <div class="column">
-                    <% } else { %>
-                <div class="column">
-                    <% } %><%- include("LED/RGB.ejs", {"Name": IR, ID: LEDControllers}); %>
-                </div><%
-            });
-            LEDs.Single.forEach(IR => {
-                LEDControllers++
-                Controls++
-                if(Controls > 2) {
-                    Controls = 0;
-                %>
-            </div>
-            <div class="columns">
-                <div class="column">
-                    <% } else { %>
-                <div class="column">
-                    <% } %><%- include("LED/Single.ejs", {"Name": IR, ID: LEDControllers}); %>
-                </div><%
-            }); %>
+            <%
+              var count = {LED: 0, type:0, total: 0};
+              Object.keys(LEDs).forEach(function(type) {
+                count.type++;
+                LEDs[type].forEach(LED => {
+                    if(count.LED == 2) {
+                        count.LED = 0;
+                        %></div><div class="columns"><%
+                    }
+                    %><div class="column"><%- include(("LED/"+type), {"Name": LED, "ID": type+LED+count.LED }); %></div><%
+                count.LED++;
+                count.total++;
+                });
+              }); %>
             </div>
         </div>
         <footer class="footer" style="position: sticky;bottom:0px;">

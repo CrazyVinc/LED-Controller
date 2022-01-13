@@ -69,10 +69,10 @@ ws().on('connection', async (socket) => {
   app.post('/blocktime/:ID', async (req, res) => {
     if(req.params.ID) {
         console.log(-484, req.body);
-        const [results, fields] = await connection.promise().query(
+        const [results, fields] = await connection.promise().execute(
             'INSERT INTO `ledcontroller`.`blockedruns` (`JobID`, `Time`) VALUES (?, ?);', [req.params.ID, (req.body.extendedProps.Time).toString().slice(0, -1)]);
-            res.send("a")
-        console.log(req.body);
+        if(results.warningCount > 0) console.warn("api.js | /Blocktime/:ID", results);
+        res.send("Event "+req.body.title+"("+req.params.ID+") is now blocked.");
     } else {
         res.send("?");
     }
@@ -93,12 +93,7 @@ ws().on('connection', async (socket) => {
 app.get('/GetDates', async(req, res) => {
   const [results, fields] = await connection.promise().query(
     'SELECT * FROM ledtimes');
-    if(LED.type == "cron") {
-       Cron.time(LED.CronTime).sendAt(10).forEach(Time => {
-          console.log(Time);
-       });
-    };
-    res.send(results);
+  res.send(results);
 });
 
 app.get('/GetFeed', async(req, res) => {
@@ -120,7 +115,7 @@ app.get('/GetFeed', async(req, res) => {
           }
         });
         var obj = {
-          title: "CronID: "+LED.Name,
+          title: LED.Name,
           start: Time,
           url: "/modal/Calendar/"+LED.ID,
           extendedProps: {

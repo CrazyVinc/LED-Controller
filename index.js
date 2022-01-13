@@ -12,7 +12,6 @@ var mysql = require('mysql2');
 
 const AutoUpdater = require('./src/AutoUpdater');
 const { socketConnection } = require('./src/SocketIO');
-const gradient = require('gradient-color');
 
 var hashFiles = require('hash-files');
 var express = require('express');
@@ -30,7 +29,6 @@ var CronVerify = require('cron-validate');
 const UUID = require('uuidv4');
 
 const Arduino = require("./src/ArduinoController");
-const {RemoteCntrlColors, capitalizeFirstLetter} = require("./src/utils");
 const {connection} = require("./src/Database");
 const CronJobs = require("./src/CronJobs");
 const { verify, randomUUID } = require('crypto');
@@ -76,23 +74,21 @@ var auth = async (req, res, next) => {
         const [results, fields] = await connection.promise().query(
             'SELECT * FROM accounts WHERE username = ? AND token = ?',
             [req.session.username, req.session.token]);
-        if (results.length > 0) {
-          console.log("Next");
-        } else {
-          console.log("Dest");
+        if (results.length == 0) {
           req.session.destroy();
-          return res.redirect('/');
+          return res.status(403).redirect('/');
         }
         req.session.CheckFree = 3;
         return next();
       } else {
+        req.session.CheckFree--
         return next();
       }
     } else {
-      return res.redirect('/');
+      return res.status(403).redirect('/');
     }
   } else {
-    return res.redirect('/');
+    return res.status(403).redirect('/');
   }
 };
 
@@ -114,6 +110,7 @@ app.post('/update', async(req, res) => {
       res.send({hash: hash});
     });
   } else {
+    console.log("Requested update is canceled.")
     res.send({hash: null, UpdateServer: false});
   }
 });
@@ -182,9 +179,8 @@ app.post('/auth', function(request, response) {
 	if (username && password) {
 		connection.query('SELECT * FROM accounts WHERE username = ? AND password = ?', [username, password], function(error, results, fields) {
 			if (results.length > 0) {
-        console.log(results[0].token);
 				request.session.loggedin = true;
-        request.session.CheckFree = 3;
+        request.session.CheckFree = 5;
 				request.session.username = username;
 				request.session.token = results[0].token;
 				response.redirect('/home');
@@ -209,66 +205,17 @@ app.get('/Settings', auth, function(req, res) {
   res.render('settings');
 });
 
-app.get('/Calendar', async(req, res) => {
-  const [BlockedRuns] = await connection.promise().query('SELECT * FROM blockedruns');
-  const [results, fields] = await connection.promise().query(
-      'SELECT * FROM ledtimes WHERE `enabled`=\"true\"');
-  res.render('Calendar', {"LEDS": results, "BlockedRuns": BlockedRuns, Cron: CronJob, moment: moment});
+app.get('/Calendar', auth, async(req, res) => {
+  res.render('Calendar', {Cron: CronJob, moment: moment});
 });
 
 app.get('/control', auth, function(req, res) {
   res.render('control');
 });
 
-
-app.post('/modal/Calendar/:ID', auth, async(req, res) => {
-  console.log(req.body);
-  if(req.params.ID) {
-    const [results, fields] = await connection.promise().query(
-      'SELECT * FROM ledtimes WHERE `enabled`=\"true\"');
-      console.log(results);
-    res.render('modal/Calendar', {"LEDS": results, Cron: CronJob, moment: moment, req: req});
-  } else {
-    console.log("?");
-    res.send("?");
-  }
-});
-
-app.post('/modal/NewEvent', auth, async(req, res) => {
-  console.log(req.body);
-  res.render('modal/NewEvent', {capitalizeFirstLetter, Cron: CronJob, moment: moment, req: req, RemoteCntrlColors: RemoteCntrlColors});
-});
-
+app.use('/modal', auth, require("./routes/modal"));
+app.use('/test', auth, require("./routes/test"));
 app.use('/api', auth, require("./routes/api"));
-
-app.get('/test', async(req, res) => {
-  if(req.query.stop !== undefined) {
-    res.send("stop");
-    return;
-  }
-  if(req.query.rgb !== undefined) {
-    Arduino.Write("rgb "+req.query.rgb);
-    res.send("rgb");
-    return;
-  }
-  console.log(req.query.colors);
-  const colors = gradient.default(req.query.colors.split(","), req.query.count || 10)
-  var search = /([0-9]+), ([0-9]+), ([0-9]+)/;
-
-  colors.forEach(color => {
-    color = color.match(search);
-    Arduino.Write("rgb "+color[0]);
-  });
-  res.send(colors);
-});
-
-app.get('/test2', auth, async(req, res) => {
-  for(let i = 0; i < 500; i++) {
-    Arduino.Write("power on");
-    Arduino.Write("power off");
-  };
-  res.send("");
-});
 
 app.get('*', auth, function(req, res){
   res.status(404).render('errors', {error: {code: "404"}});

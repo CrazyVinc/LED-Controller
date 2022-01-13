@@ -50,10 +50,10 @@
         });
       }
       function EditEvent(URL, Name, Data) {
-        if(Panels["NewEvent"] !== undefined) { Panels["NewEvent"].close(); }
-        Panels["NewEvent"] = jsPanel.create({
+        if(Panels["EditEvent-"+Data.extendedProps.ID] !== undefined) { Panels["EditEvent-"+Data.extendedProps.ID].close(); }
+        Panels["EditEvent-"+Data.extendedProps.ID] = jsPanel.create({
           onclosed: function(panel, closedByUser) {
-              delete Panels["NewEvent"];
+              delete Panels["EditEvent-"+Data.extendedProps.ID];
           },
           contentAjax: {
             method: "POST",
@@ -157,12 +157,8 @@
         content: content,
         theme: 'success filled',
         headerTitle: '<i class="fa-regular fa-message"></i> Response',
-        animateIn: 'animate__animated animate__bounceInUp',
-        animateOut: 'animate__animated animate__bounceOutUp',
-        autoclose: {
-            background: '#80bf84'
-        }
-    });
+        autoclose: '5s'
+      });
     }
 
     function BlockTime(ID, Data) {
@@ -177,7 +173,7 @@
             if(http.readyState == 4 && http.status == 200) {
                 hint(http.responseText);
                 calendar.refetchEvents();
-                Panels[Data.extendedProps.ID].close();
+                Panels["EditEvent-"+Data.extendedProps.ID].close();
             }
         }
         http.send(JSON.stringify(Data));
@@ -194,7 +190,7 @@
             if(http.readyState == 4 && http.status == 200) {
                 hint(http.responseText);
                 calendar.refetchEvents();
-                Panels[Data.extendedProps.ID].close();
+                Panels["EditEvent-"+Data.extendedProps.ID].close();
             }
         }
         http.send(JSON.stringify(Data));

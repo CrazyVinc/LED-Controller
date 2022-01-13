@@ -35,30 +35,52 @@ app.get('/CronJob', function(req, res) {
 });
 
 app.post('/event', async (req, res) => {
+    var data = req.body;
     console.log(-231, req.body);
-    if(req.body.DayOfMonth.toString().includes(",")) {
-        req.body.DayOfMonth = "["+req.body.DayOfMonth+"]";
+    if(data.RunType == "Cron") {
+        if(data.Sec.includes('*')) data.Sec = '*';
+        if(data.Min.includes('*')) data.Min = '*';
+        if(data.Hours.includes('*')) data.Hours = '*';
+        if(data.DayOfMonth.includes('*')) data.DayOfMonth = '*';
+        if(data.Months.includes('*')) data.Months = '*';
+        if(data.DayOfWeek.includes('*')) data.DayOfWeek = '*';
+        if(data.DayOfMonth.toString().includes(",")) {
+            data.DayOfMonth = "["+data.DayOfMonth+"]";
+        }
+        if(data.DayOfWeek.toString().includes(",")) {
+            data.DayOfWeek = "["+data.DayOfWeek+"]";
+        }
     }
-    if(req.body.DayOfWeek.toString().includes(",")) {
-        req.body.DayOfWeek = "["+req.body.DayOfWeek+"]";
-    }
+    
+    data.RunOn = data.Calendar || (data.Sec+" "+data.Min+" "+data.Hours+" "+data.DayOfMonth+" "+data.Months+" "+data.DayOfWeek)
+    console.log(-3773, data);
+    var ArduinoCMDs = [];
+    data.Enable = data.Enable.split(',');
+    data.Enable.forEach(Enabled => {
+        ArduinoCMDs.push(Enabled + " "+data[Enabled+"Value"]);
+    });
+    // console.log(ArduinoCMDs);
+
     connection.execute(
         "INSERT INTO `ledcontroller`.`ledtimes` (`Name`, `CronTime`, `enabled`, `Color`, `TMPColor`, `Brightness`, `type`, `LedStrip`, `Arduino`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [
                 req.body.Naam,
-                req.body.Sec+" "+req.body.Min+" "+req.body.Hours+" "+req.body.DayOfMonth+" "+req.body.Months+" "+req.body.DayOfWeek,
-                true,
-                "white",
+                data.RunOn,
+                "true",
+                null,
                 "sky",
                 6,
-                req.body.RunType,
-                "*",
-                "rgb 255,255,255"
+                req.body.RunType.toString().toLowerCase(),
+                data.Enable.join(","),
+                ArduinoCMDs.join("\\n")
             ],
         function(err, results, fields) {
+            if(err) console.warn(err);
           console.log(results); // results contains rows returned by server
           console.log(fields); // fields contains extra meta data about results, if available
-      
+          setTimeout(() => {
+            CronJobs.LED2Cron.fireOnTick();
+          }, 500);
           // If you execute same statement again, it will be picked from a LRU cache
           // which will save query preparation time and give better performance
         }

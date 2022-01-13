@@ -66,13 +66,13 @@ var LED = new CronJob.CronJob('0 0 0 * * *', async () => {
         return;
     }
 
-    await Arduino.Write("power on");
+    await Arduino.Write("bed power on");
     if(LedTMP.WakeUP.TMPColor !== null) {
         console.log(384);
-        await Arduino.Write("color "+LedTMP.WakeUP.TMPColor);
+        await Arduino.Write("bed color "+LedTMP.WakeUP.TMPColor);
     }
     await Arduino.Brightness(LedTMP.WakeUP.Brightness);
-    await Arduino.Write("color "+LedTMP.WakeUP.Color);
+    await Arduino.Write("bed color "+LedTMP.WakeUP.Color);
     LEDWakeUpEvent = new Date() - LEDWakeUpEvent;
     console.log('LEDs completed: ' + LEDWakeUpEvent + 'ms');
 }, null, false);
@@ -129,11 +129,11 @@ var EventReload = new CronJob.CronJob('0 */5 * * * *', async () => {
                         
                         if(JobsInit[Event[0]].init) {
                             console.log("SunSet", -472);
-                            await Arduino.Write("power on");
-                            await Arduino.Write("rgb 175");
-                            await Arduino.Write("power on");
+                            await Arduino.Write("bed power on");
+                            await Arduino.Write("pc rgb 175");
+                            await Arduino.Write("bed power on");
                             await Arduino.Brightness(Event[1].Brightness);
-                            await Arduino.Write("color "+Event[1].Color);
+                            await Arduino.Write("bed color "+Event[1].Color);
                         } else {
                             JobsInit[Event[0]] = {"init": true}
                         }
@@ -193,28 +193,15 @@ var LED2Cron = new CronJob.CronJob('0 */5 * * * *', async () => {
                 TMP["LED2Cron"][row.ID].RunTime = new Date();
                 
                 if(row.Color == "off") {
-                    await Arduino.Write("power off");
-                } else {
-                    await Arduino.Write("power on");
-                    await Arduino.Brightness(row.Brightness);
-                    await Arduino.Write("color "+row.Color);
+                    await Arduino.Write("bed power off");
+                } else if(row.Color != null) {
+                    await Arduino.Write("bed power on");
+                    await Arduino.brightness(row.Brightness);
+                    await Arduino.Write("bed color "+row.Color);
                 }
 
                 if(row.Arduino !== undefined) {
-                    if(new RegExp("\(\d*\)").test(row.Arduino)) {
-                        if(!(row.Arduino).includes('\\n')) row.Arduino = row.Arduino+"\\n";
-                        asyncForEach((row.Arduino).split('\\n'), async (row2) => {
-                            if(new RegExp("sleep\(\d*\)").test(row2)) {
-                                setTimeout(()=> {}, row2.match(/\d*/g).join(''));
-                            } else if(new RegExp("bright\(\d*\)").test(row2)) {
-                               await Arduino.Brightness(row2.match(/\d*/g).join(''));
-                            } else {
-                               await Arduino.Write(row2);
-                            }
-                        });
-                    } else {
-                        await Arduino.Write(row.Arduino);
-                    }
+                    Arduino.WriteAdvanced(row.Arduino);
                 }
 
                 TMP["LED2Cron"][row.ID].RunTime = new Date() - TMP["LED2Cron"][row.ID].RunTime
@@ -249,6 +236,7 @@ var LED2Cron = new CronJob.CronJob('0 */5 * * * *', async () => {
 module.exports = { 
     LedJob: LED,
     EventReload,
+    LED2Cron,
     Events,
     AutoUpdaterCron
 }
