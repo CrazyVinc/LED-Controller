@@ -9,7 +9,7 @@ var moment = require('moment-strftime');
 const axios = require('axios');
 const merge = require('deepmerge')
 
-const {connection, DBStatus, Queue} = require("./Database");
+const {connection, models} = require("./Database");
 const ConfigControl  = require("./ConfigManager.js");
 const Arduino = require("./ArduinoController");
 const AutoUpdater = require("./AutoUpdater");
@@ -24,30 +24,7 @@ var TMP = {
 var LEDWakeUpEvent;
 var LedTMP = {};
 
-// var DatabaseOffline = new CronJob.CronJob('0 */5 * * * *', async () => {
-//     connection.query("SELECT * FROM `ledtimes` WHERE `Name`=\"active\" AND `enabled`=\"true\" LIMIT 1", function(err, rows, fields) {
-//         if(err) {
-//             // DB.
-//             DBStatus.update = {Status: false, info: err}
-//             console.log("Database error: ", err);
-//             LED.stop();
-//             return;
-//         }
-//         if(rows.length > 0) {
-//             console.log("\nREFRESH\n");
-//             console.log(rows[0].CronTime);
-//             LEDJobTracking = rows[0];
-//             LED.setTime(CronJob.time(rows[0].CronTime));
-//             LED.start();
-//             LedTMP.WakeUP = rows[0];
-//         } else {
-//             console.log("No active LED Timer found!");
-//             LED.stop();
-//         }
-//     })
-// }, null, true, null, null, true);
-
-var AutoUpdaterCron = new CronJob.CronJob('0 0 * * * *', async () => {
+var AutoUpdaterCron = new CronJob.CronJob('0 0 */3 * * *', async () => {
     console.log("Looking for updates..");
     AutoUpdater.update();
 }, null, true, null, null, false);
@@ -97,6 +74,7 @@ var EventReload = new CronJob.CronJob('0 */5 * * * *', async () => {
                         }
                     },
                 });
+
                 Events2[Event[0]] = new CronJob.CronJob('0 0 0 1 1 1', async () => {
                     console.log(`Recheck Event for ${Event[0]}...`);
                     TMP["RunTimeCalc"][Event[0]]["RunTime"] = new Date();
@@ -114,7 +92,7 @@ var EventReload = new CronJob.CronJob('0 */5 * * * *', async () => {
                     TMP["RunTimeCalc"][Event[0]]["RunTime"] = new Date() - TMP["RunTimeCalc"][Event[0]]["RunTime"];
                     console.log('Recheck Event completed: %dms', TMP["RunTimeCalc"][Event[0]]["RunTime"]);
                     Events[Event[0]].start();
-                }, null, false, null, null, true);
+                }, null, true, null, null, true);
 
 
                 Events[Event[0]] = new CronJob.CronJob('0 0 18 1 1 1', async () => {
@@ -126,7 +104,6 @@ var EventReload = new CronJob.CronJob('0 */5 * * * *', async () => {
                         });
                         
                         Events2[Event[0]].setTime(new CronJob.CronTime(Recheck));
-                        
                         if(JobsInit[Event[0]].init) {
                             console.log("SunSet", -472);
                             await Arduino.Write("bed power on");
@@ -135,17 +112,12 @@ var EventReload = new CronJob.CronJob('0 */5 * * * *', async () => {
                             await Arduino.Brightness(Event[1].Brightness);
                             await Arduino.Write("bed color "+Event[1].Color);
                         } else {
-                            JobsInit[Event[0]] = {"init": true}
+                            JobsInit[Event[0]] = {"init": true};
                         }
                     }
                     LEDWakeUpEvent = new Date() - LEDWakeUpEvent;
                     console.log('Event completed: ' + LEDWakeUpEvent + 'ms');
-                }, null, true, null, null, true);
-
-                await new Promise(r => setTimeout(r, 1000));
-
-                Events[Event[0]].start();
-                Events2[Event[0]].start();
+                }, null, false, null, null, true);
             }
         } else {
             console.log("Deleting..");
@@ -166,6 +138,8 @@ var LEDCrons = {
         "new2": []
     }
 };
+
+
 // MySQL Jobs
 var LED2Cron = new CronJob.CronJob('0 */5 * * * *', async () => {
     console.log('Starting LED Commands refreshing...');
@@ -174,10 +148,19 @@ var LED2Cron = new CronJob.CronJob('0 */5 * * * *', async () => {
             "RunTime": new Date(),
         },
     });
-    
-    const [results, fields] = await connection.promise().query(
-        'SELECT * FROM ledtimes WHERE enabled=\"true\"');
 
+    const fields = await models.ledtimes_model.findAll({
+        where: {
+            enabled: true
+        }
+    });
+    var results = [];
+    
+    for (let i = 0; i < fields.length; i++) {
+        const row = fields[i];
+        results.push(row.dataValues);
+    }
+    
     LEDCrons["jobs"]["new"] = [];
     asyncForEach(results, async (row) => {
         TMP = merge(TMP, {
@@ -189,19 +172,40 @@ var LED2Cron = new CronJob.CronJob('0 */5 * * * *', async () => {
         });
         if(LEDCrons["Job"][row.ID] == undefined) {
             LEDCrons["Job"][row.ID] = new CronJob.CronJob('0 0 0 * * *', async () => {
+                
                 console.log(`Running Job for ${row.Name}...`);
                 TMP["LED2Cron"][row.ID].RunTime = new Date();
+                var TMPLED = {
+                    IR: [], RGB: []
+                };
+                if(row.LedStrip == "*") {
+                    Object.keys(ConfigControl.config.get("LEDs")).forEach(function (key) {
+                        ConfigControl.config.get()["LEDs"][key].forEach(key2 => {
+                            if(key == "IRRGB") {
+                                TMPLED.IR.push(key2)
+                            } else {
+                                TMPLED.RGB.push(key2);
+                            }
+                        });
+                    });
+                }
                 
                 if(row.Color == "off") {
-                    await Arduino.Write("bed power off");
+                    asyncForEach(TMPLED.IR, async (IR) => {
+                        Arduino.Write(IR+" power off");
+                    });
                 } else if(row.Color != null) {
-                    await Arduino.Write("bed power on");
-                    await Arduino.brightness(row.Brightness);
-                    await Arduino.Write("bed color "+row.Color);
+                    asyncForEach(TMPLED.IR, async (IR) => {
+                        Arduino.Write(IR+" power on");
+                        await Arduino.brightness(row.Brightness);
+                        Arduino.Write(IR+" color "+row.Color);
+                    });
                 }
 
-                if(row.Arduino !== undefined) {
-                    Arduino.WriteAdvanced(row.Arduino);
+                if(row.RGB !== undefined) {
+                    asyncForEach(TMPLED.RGB, async (LED) => {
+                        Arduino.WriteAdvanced(LED + " RGB "+row.RGB);
+                    });
                 }
 
                 TMP["LED2Cron"][row.ID].RunTime = new Date() - TMP["LED2Cron"][row.ID].RunTime
@@ -230,7 +234,12 @@ var LED2Cron = new CronJob.CronJob('0 */5 * * * *', async () => {
     }
     TMP["LED2Cron"].RunTime = new Date() - TMP["LED2Cron"].RunTime;
     console.log('LED Commands Lookup completed in: %dms', TMP["LED2Cron"].RunTime);
-}, null, true, null, null, true);
+}, null, false, null, null, false);
+
+setTimeout(() => {
+    LED2Cron.start();
+    LED2Cron.fireOnTick()
+}, 7500);
 
 
 module.exports = { 

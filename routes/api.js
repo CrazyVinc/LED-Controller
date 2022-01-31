@@ -4,10 +4,6 @@ let ejs = require('ejs');
 var bodyParser = require('body-parser');
 var moment = require('moment');
 
-const SerialPort = require('serialport');
-const Readline = require('@serialport/parser-readline');
-const Ready = require('@serialport/parser-ready')
-
 var CronJob = require('cron');
 var CronVerify = require('cron-validate');
 
@@ -32,25 +28,6 @@ app.post('/VerifyCron', function(req, res) {
     console.log(Verify);
     res.send(Verify);
   });
-/*
-app.post('/SendLedCommand', async (req, res) => {
-  const foo = async () => {
-    const roomId = '12345';
-    const key = 'new-order';
-    const message = 'new order assigned';
-    
-    await sendMessage(roomId, key, message);
-  };
-  console.log(foo(), 893);
-  if(req.body.shortcut) {
-    if((req.body.shortcut).startsWith("Brightness")) {
-      await Arduino.Brightness((req.body.shortcut).split('|')[1])
-    }
-  } else {
-    await Arduino.Write(req.body.action);
-  }
-  res.send(req.body);
-});*/
 
 ws().on('connection', async (socket) => {
   socket.on('action', async (msg) => {

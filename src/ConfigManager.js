@@ -1,28 +1,32 @@
 const fs = require('fs');
 var convict = require('convict');
-var config = convict("./config-schema.json");
-config.loadFile('./config.json');
+var path = require('path');
+
+var path2 = path.resolve(__dirname+"/..");
+console.log(path);
+var config = convict(path2+"/config-schema.json");
+config.loadFile(path2+'/config.json');
 config.validate();
 
 config.save = function() {
-	fs.writeFile('config.json', config.toString(), function (err) {
+	fs.writeFile(path2+'/config.json', config.toString(), function (err) {
 		if (err) console.warn(err);
 	});
 };
 config.saveSet = function() {
-	fs.writeFile('config.json', config.toString(), function (err) {
+	fs.writeFile(path2+'/config.json', config.toString(), function (err) {
 		if (err) console.warn(err);
 	});
 };
 
 config.reload = function() {
-	config.loadFile('./config.json');
+	config.loadFile(path2+'/config.json');
 }
 
 config.SaveReload = function() {
-	fs.writeFile('config.json', config.toString(), function (err) {
+	fs.writeFile(path2+'/config.json', config.toString(), function (err) {
 		if (err) console.warn(err);
-		config.loadFile('./config.json');
+		config.loadFile(path2+'/config.json');
 	});
 }
 //config.save();
@@ -34,7 +38,7 @@ const AutoUpdater = {
 };
 
 function ReloadUpdater() {
-    let rawdata = fs.readFileSync('./AutoUpdater.json');
+    let rawdata = fs.readFileSync(path2+'/AutoUpdater.json');
     AutoUpdater.new = JSON.parse(rawdata);
 }
 

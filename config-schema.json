@@ -21,6 +21,11 @@
         "arg": "port"
     },
     "DB": {
+        "Sequelize": {
+            "doc": "Is Sequelize already initialized",
+            "format": "Boolean",
+            "default": false
+        },
         "hostname": {
             "doc": "Database hostname/IP",
             "format": "String",

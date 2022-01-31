@@ -53,6 +53,7 @@ func Unzip(source, destination string) error {
 	}
 	return nil
 }
+
 func main() {
 	log.Printf("Starting unzipping...")
 	err := Unzip("./temp/update.zip", "./")

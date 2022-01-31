@@ -37,6 +37,7 @@ module.exports = {
     asyncForEach: asyncForEach,
     hexRgb: hexToRGB,
     RandomString: RandomString(),
+    RandomString2: RandomString,
     RemoteCntrlColors,
     capitalizeFirstLetter,
 }

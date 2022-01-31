@@ -22,7 +22,11 @@ ArduinoPort.setDefaultEncoding("utf-8");
 ArduinoPort.on("open", () => {
   TimeOut = setTimeout(() => {
     let LastDataJSON = fs.readFileSync("LastData.json");
-    LastDataJSON = JSON.parse(LastDataJSON);
+    try {
+      LastDataJSON = JSON.parse(LastDataJSON);
+    } catch (e) {
+      LastDataJSON = {}
+    }
     Object.keys(LastDataJSON).forEach(function (key) {
       var LED = LastDataJSON[key];
       console.log(0, LED);
@@ -50,7 +54,11 @@ if (!fs.existsSync("LastData.json")) {
   });
 } else {
   LastDataJSON = fs.readFileSync("LastData.json");
-  LastDataJSON = JSON.parse(LastDataJSON);
+  try {
+    LastDataJSON = JSON.parse(LastDataJSON);
+  } catch (e) {
+    LastDataJSON = {}
+  }
 }
 
 function LastData(data) {
@@ -76,7 +84,7 @@ function ArduinoWrite(data, init, type) {
   if (type === undefined) type = "general"; // Old code support!
   var tmp = 500;
   if (type == "RGB" || type == "Single") {
-    tmp = 25;
+    tmp = 50;
   }
 
   Queue[type].add(() => {

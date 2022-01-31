@@ -81,7 +81,7 @@ function arch2() {
 }
 
 function runUpdater() {
-    console.log("Looking for compiled updater")
+    console.log("Looking for compiled updater");
     var platform = platform2();
     var arch = arch2();
     if(platform == "NoSupport" || arch == "NoSupport") {
@@ -92,11 +92,17 @@ function runUpdater() {
     if(platform == "windows") arch = arch+".exe"; // 32 Bit requires administration rights
     var updater = "Updater/Updater-"+platform+"-"+arch;
     if(fs.existsSync(updater)) {
-        console.log("Compiled updater found! Starting updater.")
-        process.send(JSON.stringify({
-            msg: "update available!",
-            exec: updater
-        }));
+        console.log("Compiled updater found! Making ready for starting the updater.");
+        fs.copyFile(updater, "RUN."+updater, (err) => {
+            if (err) {
+                console.warn("There was a error while making ready for executing the updater:", err);
+                return err;
+            }
+            process.send(JSON.stringify({
+                msg: "update available!",
+                exec: "RUN."+updater
+            }));
+        });
     } else {
         console.log("???", updater);
     }

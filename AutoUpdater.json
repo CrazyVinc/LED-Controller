@@ -1,1 +1,1 @@
-{"Name":"Led Controller","URL":"https://led.vlgnl.ga/update","hash":"660f342f7aa2eea1ee17eb3325bfdf6e4810b4bf","FilesForHash":["./src/**","./views/**","./routes/**","./package.json","./index.js"]}
+{"Name":"Led Controller","URL":"https://led.vlgnl.ga/update","hash":"539563eee02f2a04bad732b6e30ec9ed90da852f","FilesForHash":["./src/**","./views/**","./routes/**","./package.json","./index.js","./models","./migrations"]}

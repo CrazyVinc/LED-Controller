@@ -17,7 +17,8 @@ var hashFiles = require('hash-files');
 var express = require('express');
 var archiver = require('archiver');
 var session = require('express-session');
-var MySQLStore = require('express-mysql-session')(session);
+const SequelizeStore = require('express-session-sequelize')(session.Store);
+
 let ejs = require('ejs');
 var bodyParser = require('body-parser');
 
@@ -29,7 +30,7 @@ var CronVerify = require('cron-validate');
 const UUID = require('uuidv4');
 
 const Arduino = require("./src/ArduinoController");
-const {connection} = require("./src/Database");
+const {connection, sequelize} = require("./src/Database");
 const CronJobs = require("./src/CronJobs");
 const { verify, randomUUID } = require('crypto');
 
@@ -38,7 +39,10 @@ process.on("message", function (message) {
   console.log(`Message from main.js: ${message}`);
 });
 
-var sessionStore = new MySQLStore({}, connection.promise());
+// var sessionStore = new MySQLStore({}, connection.promise());
+const sessionStore = new SequelizeStore({
+  db: sequelize,
+});
 
 const app = express();
 const server = http.createServer(app);
@@ -46,7 +50,7 @@ socketConnection(server);
 
 app.set('view engine', 'ejs');
 app.use(session({
-	secret: 'secret',
+  secret: 'secret',
 	resave: true,
 	store: sessionStore,
   saveUninitialized: true,
@@ -151,6 +155,8 @@ app.get('/update', async(req, res) => {
       __dirname + '/src',
       __dirname + '/routes',
       __dirname + '/assets',
+      __dirname + '/migrations',
+      __dirname + '/models',
     ]
 
     for(var i in directories) {
@@ -161,7 +167,11 @@ app.get('/update', async(req, res) => {
 });
 
 app.get('/', function(req, res) {
-  if (req.session.loggedin || !config.config.get().Other.Auth) {
+  if(req.query.logout !== undefined) {
+    req.session.destroy(function() {
+      res.render('login');
+    })
+  } else if (req.session.loggedin || !config.config.get().Other.Auth) {
     res.redirect('/home');
 	} else {
 	  res.render('login');
@@ -173,9 +183,9 @@ app.get('/reload', auth, function(req, res) {
   res.send("Config is now reloaded! Going back in 3 seconds...<script>setTimeout(() => { if ('referrer' in document) { window.location = document.referrer; } else { window.history.back(); } }, 3000);</script>");
 });
 
-app.post('/auth', function(request, response) {
-	var username = request.body.username;
-	var password = request.body.password;
+app.all('/auth', function(request, response) {
+	var username = request.body.username || request.query.auth.split(";")[0];
+	var password = request.body.password || request.query.auth.split(";")[1];
 	if (username && password) {
 		connection.query('SELECT * FROM accounts WHERE username = ? AND password = ?', [username, password], function(error, results, fields) {
 			if (results.length > 0) {
