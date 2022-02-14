@@ -13,8 +13,7 @@
           <% } else { %>
             <button onclick="BlockTime(<%- req.params.ID %>, <%= JSON.stringify(req.body) %>)" class="button is-warning">Block this run</button>
           <% } %>
-          <button class="button is-danger">Delete CronJob</button><br>
-          
+          <button onclick="Delete(<%- req.params.ID %>, <%= JSON.stringify(req.body) %>)" class="button is-danger">Delete CronJob</button>
         </div>
         <div class="column">
         </div>

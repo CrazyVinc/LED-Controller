@@ -15,7 +15,7 @@ const Arduino = require("./ArduinoController");
 const AutoUpdater = require("./AutoUpdater");
 
 const { randomUUID, randomInt } = require('crypto');
-const { asyncForEach }  = require("./utils");
+const { asyncForEach, MySQL2ToSequelize }  = require("./utils");
 
 
 var TMP = {
@@ -32,8 +32,16 @@ var AutoUpdaterCron = new CronJob.CronJob('0 0 */3 * * *', async () => {
 var LED = new CronJob.CronJob('0 0 0 * * *', async () => {
     console.log('Waking Up...');
     LEDWakeUpEvent = new Date();
-    const [results, fields] = await connection.promise().query(
-        'SELECT * FROM blockedruns WHERE Time=? limit 1', [moment().unix().toString().slice(0, -1)]);
+    
+    const results = MySQL2ToSequelize(await models.blockedruns.findAll({
+        where: {
+            Time: moment().unix().toString().slice(0, -1)
+        }
+    }))
+    
+    console.log(883, moment().unix().toString().slice(0, -1))
+    // const [results, fields] = await connection.promise().query(
+    //     'SELECT * FROM blockedruns WHERE Time=? limit 1', [moment().unix().toString().slice(0, -1)]);
     if(results.length > 0) {
         console.log("LED Job is blocked, Deleting MySQL Row...");
         await connection.promise().query('DELETE FROM `blockedruns` WHERE `ID`=?;', [results[0].ID]);
@@ -107,7 +115,7 @@ var EventReload = new CronJob.CronJob('0 */5 * * * *', async () => {
                         if(JobsInit[Event[0]].init) {
                             console.log("SunSet", -472);
                             await Arduino.Write("bed power on");
-                            await Arduino.Write("pc rgb 175");
+                            await Arduino.Write("pc rgb 255,255,255");
                             await Arduino.Write("bed power on");
                             await Arduino.Brightness(Event[1].Brightness);
                             await Arduino.Write("bed color "+Event[1].Color);
@@ -172,12 +180,28 @@ var LED2Cron = new CronJob.CronJob('0 */5 * * * *', async () => {
         });
         if(LEDCrons["Job"][row.ID] == undefined) {
             LEDCrons["Job"][row.ID] = new CronJob.CronJob('0 0 0 * * *', async () => {
+                const IsBlocked = await MySQL2ToSequelize(await models.blockedruns.findAll({
+                    attributes: ['id'],
+                    where: {
+                        JobID: row.ID,
+                        Time: moment().unix().toString().slice(0, -1)
+                    }
+                }));
+                if(IsBlocked.length > 0) {
+                    await models.blockedruns.destroy({
+                        where: {
+                          id: IsBlocked[0].id,
+                        }
+                      });
+                    return;
+                }
                 
                 console.log(`Running Job for ${row.Name}...`);
                 TMP["LED2Cron"][row.ID].RunTime = new Date();
                 var TMPLED = {
                     IR: [], RGB: []
                 };
+
                 if(row.LedStrip == "*") {
                     Object.keys(ConfigControl.config.get("LEDs")).forEach(function (key) {
                         ConfigControl.config.get()["LEDs"][key].forEach(key2 => {

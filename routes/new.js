@@ -14,7 +14,7 @@ var CronVerify = require('cron-validate');
 const UUID = require('uuidv4');
 
 const Arduino = require("../src/ArduinoController");
-const {connection} = require("../src/Database");
+const { models } = require("../src/Database");
 const CronJobs = require("../src/CronJobs");
 const { verify, randomUUID } = require('crypto');
 
@@ -36,7 +36,6 @@ app.get('/CronJob', function(req, res) {
 
 app.post('/event', async (req, res) => {
     var data = req.body;
-    console.log(-231, req.body);
     if(data.RunType == "Cron") {
         if(data.Sec.includes('*')) data.Sec = '*';
         if(data.Min.includes('*')) data.Min = '*';
@@ -52,39 +51,25 @@ app.post('/event', async (req, res) => {
         }
     }
     
-    data.RunOn = data.Calendar || (data.Sec+" "+data.Min+" "+data.Hours+" "+data.DayOfMonth+" "+data.Months+" "+data.DayOfWeek)
-    console.log(-3773, data);
+    data.RunOn = data.Calendar || (data.Sec+" "+data.Min+" "+data.Hours+" "+data.DayOfMonth+" "+data.Months+" "+data.DayOfWeek);
+
     var ArduinoCMDs = [];
     data.Enable = data.Enable.split(',');
     data.Enable.forEach(Enabled => {
         ArduinoCMDs.push(Enabled + " "+data[Enabled+"Value"]);
     });
-    // console.log(ArduinoCMDs);
 
-    connection.execute(
-        "INSERT INTO `ledcontroller`.`ledtimes` (`Name`, `CronTime`, `enabled`, `Color`, `TMPColor`, `Brightness`, `type`, `LedStrip`, `Arduino`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            [
-                req.body.Naam,
-                data.RunOn,
-                "true",
-                null,
-                "sky",
-                6,
-                req.body.RunType.toString().toLowerCase(),
-                data.Enable.join(","),
-                ArduinoCMDs.join("\\n")
-            ],
-        function(err, results, fields) {
-            if(err) console.warn(err);
-          console.log(results); // results contains rows returned by server
-          console.log(fields); // fields contains extra meta data about results, if available
-          setTimeout(() => {
-            CronJobs.LED2Cron.fireOnTick();
-          }, 500);
-          // If you execute same statement again, it will be picked from a LRU cache
-          // which will save query preparation time and give better performance
-        }
-      );
+    await models.ledtimes_model.create({
+        Name: req.body.Naam,
+        CronTime: data.RunOn,
+        enabled: true,
+        cmd: ArduinoCMDs.join(","),
+        type: req.body.RunType.toString().toLowerCase(),
+        LedStrip: data.Enable.join(",")
+    });
+    setTimeout(() => {
+        CronJobs.LED2Cron.fireOnTick();
+    }, 500);
     res.send(req.body);
   });
   

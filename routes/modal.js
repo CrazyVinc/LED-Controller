@@ -18,20 +18,20 @@ var config = require('../src/ConfigManager');
 var app = express.Router();
 
 app.post('/Calendar/:ID', async(req, res) => {
-    console.log(req.body);
+    // console.log(req.body, req.params);
     if(req.params.ID) {
       const [results, fields] = await connection.promise().query(
-        'SELECT * FROM ledtimes WHERE `enabled`=\"true\"');
-        console.log(results);
+        'SELECT * FROM ledtimes WHERE enabled=1');
+        // console.log(results);
         res.render('modal/EditEvent', {"LEDS": results, Cron: CronJob, moment: moment, req: req});
     } else {
-      console.log("?");
+      // console.log("?");
       res.send("?");
     }
   });
   
   app.post('/NewEvent', async(req, res) => {
-    console.log(req.body);
+    // console.log(req.body);
     res.render('modal/NewEvent', {config: JSON.parse(config.config), capitalizeFirstLetter, Cron: CronJob, moment: moment, req: req, RemoteCntrlColors: RemoteCntrlColors});
   });
   

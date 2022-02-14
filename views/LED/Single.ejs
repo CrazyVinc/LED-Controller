@@ -11,13 +11,36 @@
     </header>
     <div class="card-content">
         <div style="margin-bottom: -0.5rem;" class="buttons has-addons">
-            <button style="font-size: xx-large;" onclick="LedAction('<%- Name %>', 'power off');" class="button"><i class="fas fa-lightbulb-slash"></i></button>
-            <button style="font-size: xx-large;" onclick="LedAction('<%- Name %>', 'power on')" class="button"><i class="fas fa-lightbulb-on"></i></button>
+            <button style="font-size: xx-large;" onclick="Single<%- ID+Name %>Set('off');" class="button"><i class="fas fa-lightbulb-slash"></i></button>
+            <button style="font-size: xx-large;" onclick="Single<%- ID+Name %>Set('on')" class="button"><i class="fas fa-lightbulb-on"></i></button>
         </div>
     </div>
     <footer class="card-footer">
-        <a class="card-footer-item"></a>
-        <a class="card-footer-item"></a>
-        <a class="card-footer-item"></a>
+        <a class="card-footer-item">State</a>
+        <a class="card-footer-item">Current</a>
+        <a class="card-footer-item">Queue</a>
+    </footer>
+    <footer class="card-footer">
+        <a class="card-footer-item" id="Single<%- Name %>">off</a>
+        <a class="card-footer-item" id="CurrentState<%- Name %>">off</a>
+        <a class="card-footer-item" id="Queue<%- Name %>">0</a>
     </footer>
 </div>
+<script>
+    function Single<%- ID+Name %>Set(action) {
+        socket.emit("Single.<%- Name %>", JSON.stringify({
+            action: 'power '+action,
+            LED: "Single",
+            Name: "<%- Name %>",
+            shortcut: false
+        }));
+        document.getElementById("Single<%- Name %>").innerHTML = action;
+    }
+
+    socket.on("Single.<%- Name %>", data => {
+        document.getElementById("CurrentState<%- Name %>").innerHTML = data
+    });
+    socket.on("Single.<%-Name%>Queue", data => {
+        document.getElementById("Queue<%- Name %>").innerHTML = data
+    });
+</script>

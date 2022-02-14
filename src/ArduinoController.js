@@ -9,7 +9,7 @@ const Ready = require("@serialport/parser-ready");
 
 const Queue = require("./Queue");
 const { config } = require("./ConfigManager.js");
-const { asyncForEach } = require("./utils");
+const { asyncForEach, promiseWhen } = require("./utils");
 
 const ArduinoPort = new SerialPort(config.get().SerialPort, {
   baudRate: 9600,
@@ -18,6 +18,11 @@ const ArduinoPort = new SerialPort(config.get().SerialPort, {
 });
 
 ArduinoPort.setDefaultEncoding("utf-8");
+
+ArduinoPort.on('readable', function () {
+  Queue.QueueToggle.set(false);
+  // console.log('Data:', Buffer.from(ArduinoPort.read()).toString())
+})
 
 ArduinoPort.on("open", () => {
   TimeOut = setTimeout(() => {
@@ -78,35 +83,48 @@ function LastData(data) {
   });
 }
 
-function ArduinoWrite(data, init, type) {
+function ArduinoWrite(data, init, type, LedName) {
   if (data === undefined) return;
   if (init === undefined) init = false; // Old code support!
   if (type === undefined) type = "general"; // Old code support!
+  if (LedName === undefined) LedName = "global"; // Old code support!
   var tmp = 500;
   if (type == "RGB" || type == "Single") {
     tmp = 50;
   }
 
   Queue[type].add(() => {
-    return new Promise(function (resolve, reject) {
-      ws().emit("QueueCount", Queue[type].waitingCount);
+    return new Promise(async (resolve, reject) => {
       if (!ArduinoPort.isOpen) {
         tmp = 7500;
         ArduinoPort.open();
         console.log("Waiting 7,5 sec for reconnecting!");
         ws().emit("response", "Reconnecting!");
       }
-      setTimeout(() => {
-        if (init == false) {
-          LastData(data);
-        }
-        ArduinoPort.write(data, (err) => {
-          if (err) console.warn(err, 03);
-          ws().emit("response", data);
-          console.log("IR written:", data);
-          resolve();
+      if(!Queue.QueueToggle.pause) {
+        await promiseWhen(function(){
+          return Queue.QueueToggle.pause == false;
+        }).then(() => {
+          Queue.QueueToggle.set(true);
         });
-      }, tmp);
+      }
+        var queut = 0;
+        
+        queut = Queue["RGB"].waitingCount + Queue["Single"].waitingCount + Queue["IRRGB"].waitingCount;
+        ws().emit("QueueCount", queut);
+        ws().emit(type+"."+LedName+"Queue", Queue[type].waitingCount);
+        setTimeout(() => {
+          if (init == false) {
+            LastData(data);
+          }
+          ArduinoPort.write(data + "\n", (err) => {
+            if (err) console.warn(err, 03);
+            console.log("IR written:", data);
+            ws().emit(type+"."+LedName, data);
+            ws().emit("response", data);
+            resolve();
+          });
+        }, tmp);
     });
   });
 }
@@ -136,7 +154,7 @@ async function Shortcuts(Shortcut) {
   }
 }
 
-async function brightness(level) {
+async function brightness(level, LED) {
   var count;
   if (level <= 3) {
     count = 1;
@@ -145,7 +163,7 @@ async function brightness(level) {
     console.log("Level: ", level);
     while (count <= level) {
       count++;
-      await ArduinoWrite("bed bright up");
+      await ArduinoWrite(LED + " bright up");
     }
   } else {
     count = 5;
@@ -153,7 +171,7 @@ async function brightness(level) {
     console.log("Level: ", level);
     while (level <= count) {
       count = count - 1;
-      await ArduinoWrite("bed bright down");
+      await ArduinoWrite(LED + " bed bright down");
     }
   }
 }
@@ -181,4 +199,5 @@ module.exports = {
   Write: ArduinoWrite,
   WriteAdvanced: ArduinoWriteAdvanced,
   Shortcuts,
+  LastDataJSON  
 };

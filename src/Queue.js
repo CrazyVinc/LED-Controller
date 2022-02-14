@@ -4,7 +4,7 @@ var { ws } = require("./SocketIO");
 const { config } = require("./ConfigManager.js");
 
 let Queue = {};
-let IR = new PromiseQueue({ concurrency: 1 });
+let IRRGB = new PromiseQueue({ concurrency: 1 });
 let RGB = new PromiseQueue({ concurrency: 1 });
 let Single = new PromiseQueue({ concurrency: 1 });
 let general = new PromiseQueue({ concurrency: 1 });
@@ -17,27 +17,31 @@ Object.keys(LEDs).forEach(function (type) {
     });
 });
 
-setTimeout(() => {
-    ws().on("connection", (socket) => {
-        socket.on("Queue", (msg) => {
-            console.log(msg, 93);
-            if (msg == "reset") {
-                IR._queue = [];
-                RGB._queue = [];
-                Single._queue = [];
-                Object.keys(Queue).forEach(function (type) {
-                    LEDs[type].forEach((Name) => {
-                        Queue[type][Name]._queue = [];
-                    });
+const QueueToggle = {
+	pause: false,
+	set(state) {
+        if(state) {
+            Object.keys(LEDs).forEach(function (type) {
+                LEDs[type].forEach((LED) => {
+                    Queue[type][LED].pause();
                 });
-            }
-        });
-    });
-}, 0);
+            });
+        } else {
+            Object.keys(LEDs).forEach(function (type) {
+                LEDs[type].forEach((LED) => {
+                    Queue[type][LED].resume();
+                });
+            });
+        }
+        this.pause = state;
+	},
+};
 
 module.exports = {
     Queue,
-    IR,
+    IR: IRRGB,
+    QueueToggle: QueueToggle,
+    IRRGB,
     RGB,
     Single,
     general,

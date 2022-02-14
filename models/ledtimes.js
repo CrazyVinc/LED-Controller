@@ -69,7 +69,7 @@ module.exports = sequelize => {
     },
     Brightness: {
       type: DataTypes.INTEGER(11),
-      allowNull: false,
+      allowNull: true,
       defaultValue: "2",
       primaryKey: false,
       autoIncrement: false,
@@ -93,6 +93,11 @@ module.exports = sequelize => {
       autoIncrement: false,
       comment: null,
       field: "LedStrip"
+    },
+    cmd: {
+      type: DataTypes.TEXT('long'),
+      allowNull: true,
+      field: "cmd"
     }
   };
   const options = {

@@ -11,54 +11,84 @@
     </header>
     <div class="card-content">
         <div class="content">
-            <span onclick="LedAction('<%- Name %>', 'Brightness|'+document.getElementById('<%- ID %>-sliderWithValue').value, true)" class="button is-success">Set Level</span>
+            <span onclick="IRRGB<%- ID+Name %>Set('Brightness|'+document.getElementById('<%- ID %>-sliderWithValue').value, true)" class="button is-success">Set Level</span>
             <input style="width:50%" id="<%- ID %>-sliderWithValue" class="slider has-output is-fullwidth" min="0" max="6" value="3" step="1" type="range">
             <output for="<%- ID %>-sliderWithValue">3</output>
         </div>
         <div class="columns">
             <div class="column">
                 <div style="margin-bottom: -0.5rem;" class="buttons has-addons">
-                    <button onclick="LedAction('<%- Name %>', 'bright up')" class="button"><i class="fas fa-arrow-circle-up"></i></button>
-                    <button onclick="LedAction('<%- Name %>', 'bright down')" class="button"><i class="fas fa-arrow-circle-down"></i></button>
-                    <button onclick="LedAction('<%- Name %>', 'power off');" class="button"><i class="fas fa-lightbulb-slash"></i></button>
-                    <button onclick="LedAction('<%- Name %>', 'power on')" class="button"><i class="fas fa-lightbulb-on"></i></button>
+                    <button onclick="IRRGB<%- ID+Name %>Set('bright up')" class="button"><i class="fas fa-arrow-circle-up"></i></button>
+                    <button onclick="IRRGB<%- ID+Name %>Set('bright down')" class="button"><i class="fas fa-arrow-circle-down"></i></button>
+                    <button onclick="IRRGB<%- ID+Name %>Set('power off');" class="button"><i class="fas fa-lightbulb-slash"></i></button>
+                    <button onclick="IRRGB<%- ID+Name %>Set('power on')" class="button"><i class="fas fa-lightbulb-on"></i></button>
                 </div>
                 <div style="margin-bottom: -0.5rem;" class="buttons has-addons">
-                    <button onclick="LedAction('<%- Name %>', 'color red')" style="color:Red" class="button"><i class="fas fa-tint"></i></button>
-                    <button onclick="LedAction('<%- Name %>', 'color green')" style="color:green" class="button"><i class="fas fa-tint"></i></button>
-                    <button onclick="LedAction('<%- Name %>', 'color blue')" style="color:blue" class="button"><i class="fas fa-tint"></i></button>
-                    <button onclick="LedAction('<%- Name %>', 'color white')" style="background-color:lightslategray; color:white" class="button"><i class="fas fa-tint"></i></button>
+                    <button onclick="IRRGB<%- ID+Name %>Set('color red')" style="color:Red" class="button"><i class="fas fa-tint"></i></button>
+                    <button onclick="IRRGB<%- ID+Name %>Set('color green')" style="color:green" class="button"><i class="fas fa-tint"></i></button>
+                    <button onclick="IRRGB<%- ID+Name %>Set('color blue')" style="color:blue" class="button"><i class="fas fa-tint"></i></button>
+                    <button onclick="IRRGB<%- ID+Name %>Set('color white')" style="background-color:lightslategray; color:white" class="button"><i class="fas fa-tint"></i></button>
                 </div>
                 <div style="margin-bottom: -0.5rem;" class="buttons has-addons">
-                    <button onclick="LedAction('<%- Name %>', 'color scarlet')" style="color:Scarlet" class="button"><i class="fas fa-tint"></i></button>
-                    <button onclick="LedAction('<%- Name %>', 'color Light Green')" style="color:lightgreen" class="button"><i class="fas fa-tint"></i></button>
-                    <button onclick="LedAction('<%- Name %>', 'color periwinkle')" style="color:#CCCCFF" class="button"><i class="fas fa-tint"></i></button>
-                    <button onclick="LedAction('<%- Name %>', 'mode flash')" style="background-color:lightslategray" class="button">Flash</button>
+                    <button onclick="IRRGB<%- ID+Name %>Set('color scarlet')" style="color:Scarlet" class="button"><i class="fas fa-tint"></i></button>
+                    <button onclick="IRRGB<%- ID+Name %>Set('color Light Green')" style="color:lightgreen" class="button"><i class="fas fa-tint"></i></button>
+                    <button onclick="IRRGB<%- ID+Name %>Set('color periwinkle')" style="color:#CCCCFF" class="button"><i class="fas fa-tint"></i></button>
+                    <button onclick="IRRGB<%- ID+Name %>Set('mode flash')" style="background-color:lightslategray" class="button">Flash</button>
                 </div>
                 <div style="margin-bottom: -0.5rem;" class="buttons has-addons">
-                    <button onclick="LedAction('<%- Name %>', 'color orange')" style="color:Orange" class="button"><i class="fas fa-tint"></i></button>
-                    <button onclick="LedAction('<%- Name %>', 'color mint')" style="color:springgreen" class="button"><i class="fas fa-tint"></i></button>
-                    <button onclick="LedAction('<%- Name %>', 'color purple')" style="color:purple" class="button"><i class="fas fa-tint"></i></button>
-                    <button onclick="LedAction('<%- Name %>', 'mode strobe')" style="background-color:lightslategray" class="button">Strobe</button>
+                    <button onclick="IRRGB<%- ID+Name %>Set('color orange')" style="color:Orange" class="button"><i class="fas fa-tint"></i></button>
+                    <button onclick="IRRGB<%- ID+Name %>Set('color mint')" style="color:springgreen" class="button"><i class="fas fa-tint"></i></button>
+                    <button onclick="IRRGB<%- ID+Name %>Set('color purple')" style="color:purple" class="button"><i class="fas fa-tint"></i></button>
+                    <button onclick="IRRGB<%- ID+Name %>Set('mode strobe')" style="background-color:lightslategray" class="button">Strobe</button>
                 </div>
                 <div style="margin-bottom: -0.5rem;" class="buttons has-addons">
-                    <button onclick="LedAction('<%- Name %>', 'color tangerine')" style="color:#F28500" class="button"><i class="fas fa-tint"></i></button>
-                    <button onclick="LedAction('<%- Name %>', 'color sky')" style="color:skyblue" class="button"><i class="fas fa-tint"></i></button>
-                    <button onclick="LedAction('<%- Name %>', 'color Rose')" style="color:#FF0080" class="button"><i class="fas fa-tint"></i></button>
-                    <button onclick="LedAction('<%- Name %>', 'mode fade')" style="background-color:lightslategray" class="button">Fade</button>
+                    <button onclick="IRRGB<%- ID+Name %>Set('color tangerine')" style="color:#F28500" class="button"><i class="fas fa-tint"></i></button>
+                    <button onclick="IRRGB<%- ID+Name %>Set('color sky')" style="color:skyblue" class="button"><i class="fas fa-tint"></i></button>
+                    <button onclick="IRRGB<%- ID+Name %>Set('color Rose')" style="color:#FF0080" class="button"><i class="fas fa-tint"></i></button>
+                    <button onclick="IRRGB<%- ID+Name %>Set('mode fade')" style="background-color:lightslategray" class="button">Fade</button>
                 </div>
                 <div style="margin-bottom: -0.5rem;" class="buttons has-addons">
-                    <button onclick="LedAction('<%- Name %>', 'color yellow')" style="color:yellow" class="button"><i class="fas fa-tint"></i></button>
-                    <button onclick="LedAction('<%- Name %>', 'color aqua')" style="color:aqua" class="button"><i class="fas fa-tint"></i></button>
-                    <button onclick="LedAction('<%- Name %>', 'color pink')" style="color:pink" class="button"><i class="fas fa-tint"></i></button>
-                    <button onclick="LedAction('<%- Name %>', 'mode smooth')" style="background-color:lightslategray" class="button">Smooth</button>
+                    <button onclick="IRRGB<%- ID+Name %>Set('color yellow')" style="color:yellow" class="button"><i class="fas fa-tint"></i></button>
+                    <button onclick="IRRGB<%- ID+Name %>Set('color aqua')" style="color:aqua" class="button"><i class="fas fa-tint"></i></button>
+                    <button onclick="IRRGB<%- ID+Name %>Set('color pink')" style="color:pink" class="button"><i class="fas fa-tint"></i></button>
+                    <button onclick="IRRGB<%- ID+Name %>Set('mode smooth')" style="background-color:lightslategray" class="button">Smooth</button>
                 </div>
             </div>
         </div>
     </div>
     <footer class="card-footer">
-        <a class="card-footer-item"></a>
-        <a class="card-footer-item"></a>
-        <a class="card-footer-item"></a>
+        <a class="card-footer-item">State</a>
+        <a class="card-footer-item">Current</a>
+        <a class="card-footer-item">Queue</a>
+    </footer>
+    <footer class="card-footer">
+        <a class="card-footer-item" id="IRRGB<%- Name %>">off</a>
+        <a class="card-footer-item" id="CurrentState<%- Name %>">off</a>
+        <a class="card-footer-item" id="Queue<%- Name %>">0</a>
     </footer>
 </div>
+<script>
+function IRRGB<%- ID+Name %>Set(action, shortcut = false) {
+    socket.emit("IRRGB.<%- Name %>", JSON.stringify({
+        action: action,
+        LED: "IRRGB",
+        Name: "<%- Name %>",
+        shortcut: shortcut
+    }));
+    document.getElementById("IRRGB<%- Name %>").innerHTML = action;
+}
+socket.on("IRRGB.<%- Name %>", data => {
+     document.getElementById("CurrentState<%- Name %>").innerHTML = data
+});
+socket.on("IRRGB.<%-Name%>Queue", data => {
+     document.getElementById("Queue<%- Name %>").innerHTML = data
+});
+
+socket.on("init.IRRGB.<%- Name %>", data => {
+        init<%-ID+Name%>(data)
+    });
+function init<%-ID+Name%>(data) {
+    if(data == undefined) data = document.getElementById("CurrentState<%- Name %>").innerHTML.substr(<%- (Name+" RGB ").length %>);
+    document.getElementById("IRRGB<%- Name %>").innerHTML = data;
+}
+</script>

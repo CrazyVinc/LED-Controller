@@ -15,9 +15,14 @@
         </div>
     </div>
     <footer class="card-footer">
-        <a class="card-footer-item"></a>
-        <a class="card-footer-item"></a>
-        <a class="card-footer-item"></a>
+        <a class="card-footer-item">Picker</a>
+        <a class="card-footer-item">Current</a>
+        <a class="card-footer-item">Queue</a>
+    </footer>
+    <footer class="card-footer">
+        <a class="card-footer-item" id="RGB<%- Name %>">0,0,0</a>
+        <a onclick='init<%-ID+Name%>()' class="card-footer-item" id="CurrentRGB<%- Name %>">0,0,0</a>
+        <a class="card-footer-item" id="Queue<%- Name %>">0</a>
     </footer>
 </div>
 <script>
@@ -49,7 +54,28 @@
     });
     function RGB<%- ID+Name %>SetRGB(RGB) {
         RGB = RGB.rgb
-        SetRGB("<%- Name %>", RGB);
+        socket.emit("RGB.<%- Name %>", JSON.stringify({
+            action: 'RGB '+RGB.r+','+RGB.g+','+RGB.b,
+            LED: "RGB",
+            Name: "<%- Name %>",
+            shortcut: false
+        }));
+        document.getElementById("RGB<%- Name %>").innerHTML = RGB.r+","+RGB.g+","+RGB.b;
     }
-    RGB<%- ID+Name %>.on('color:change', RGB<%- ID+Name %>SetRGB);
+    RGB<%- ID+Name %>.on('input:change', RGB<%- ID+Name %>SetRGB);
+    
+    socket.on("RGB.<%- Name %>", data => {
+         document.getElementById("CurrentRGB<%- Name %>").innerHTML = data;
+    });
+    socket.on("init.RGB.<%- Name %>", data => {
+        init<%-ID+Name%>(data)
+    });
+    socket.on("RGB.<%-Name%>Queue", data => {
+         document.getElementById("Queue<%- Name %>").innerHTML = data
+    });
+    function init<%-ID+Name%>(data) {
+        if(data == undefined) data = document.getElementById("CurrentRGB<%- Name %>").innerHTML.substr(<%- (Name+" RGB ").length %>);
+        document.getElementById("RGB<%- Name %>").innerHTML = data;
+        RGB<%- ID+Name %>.color.rgbString = 'rgb('+data+')';
+    }
 </script>

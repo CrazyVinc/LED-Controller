@@ -2,6 +2,7 @@
 <html>
   <head>
     <%- include("./includes/head.ejs", {Page: "New"}) %>
+    <script src="/assets/FontAwesome.Pro.6.0.0.Beta1/web/js/fontawesome.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@5.10.0/main.min.css">
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.0/main.min.js"></script>
     <script src='https://cdn.jsdelivr.net/npm/moment@2.27.0/min/moment.min.js'></script>
@@ -140,7 +141,6 @@
         var params = 'CronTime='+document.getElementById("CronSel").value;
         http.open('POST', url, true);
 
-        //Send the proper header information along with the request
         http.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
 
         http.onreadystatechange = function() {//Call a function when the state changes.
@@ -161,6 +161,22 @@
       });
     }
 
+    function Delete(ID, Data) {
+        var http = new XMLHttpRequest();
+        var url = '/api/delete/'+ID;
+        http.open('POST', url, true);
+
+        http.setRequestHeader('Content-type', 'application/json');
+
+        http.onreadystatechange = function() {
+            if(http.readyState == 4 && http.status == 200) {
+                Panels["EditEvent-"+Data.extendedProps.ID].close();
+                hint(http.responseText);
+                calendar.refetchEvents();
+            }
+        }
+        http.send();
+    }
     function BlockTime(ID, Data) {
         var http = new XMLHttpRequest();
         var url = '/api/blocktime/'+ID;

@@ -11,8 +11,8 @@ exports.socketConnection = (server) => {
   });
 };
 
-exports.sendMessage = (roomId, key, message) => io.to("a").emit("hello", "world");
 
+exports.sendMessage = (roomId, key, message) => io.to("a").emit("hello", "world");
 
 exports.getRooms = () => io.sockets.adapter.rooms;
 

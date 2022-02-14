@@ -11,6 +11,7 @@
     </header>
     <div class="card-content">
         <div class="content">
+            <input value="IRRGB" name="<%- Name %>Type" hidden></input>
             <div class="field has-addons">
                 <p class="control">
                     <a class="button is-static">
@@ -20,6 +21,7 @@
                 <p class="control">
                     <span class="select">
                         <select name="<%- Name %>Value">
+                            <option value="power off">off</option>
                             <% RemoteCntrlColors.forEach(color => { %>
                             <option style=<%= "background-color:"+color+"!important" %> value="color <%- color %>">
                                 <%- color %>

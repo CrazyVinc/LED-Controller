@@ -5,7 +5,8 @@ var LEDControllers = 0;
 	<head>
         <%- include("./includes/head.ejs", {Page: "Home"}) %>
         <link rel="stylesheet" href="assets/css/bulma-slider.min.css">
-        <script src="/assets/FontAwesome.Pro.6.0.0.Beta1/web/js/all.min.js"></script>
+        <script src="/assets/FontAwesome.Pro.6.0.0.Beta1/web/js/solid.min.js"></script>
+        <script src="/assets/FontAwesome.Pro.6.0.0.Beta1/web/js/fontawesome.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
         <script src="/socket.io/socket.io.js"></script>
         <script>
@@ -30,25 +31,25 @@ var LEDControllers = 0;
                         </span>
                         <div class="buttons has-addons">
                             <button onclick="<%
-                            LEDs.IRRGB.forEach(LED => {
-                                %>LedAction('<%- LED %>', 'power on');<%
-                            });
-                            LEDs.RGB.forEach(LED => {
-                                %>LedAction('<%- LED %>', 'RGB 255,255,255');<%
-                            });
-                            LEDs.Single.forEach(LED => {
-                                %>LedAction('<%- LED %>', 'power on');<%
-                            }); %>" class="button is-success">On</button>
+                            Object.keys(LEDs).forEach((LEDType) => {
+                                LEDs[LEDType].forEach((Name) => {
+                                    if(LEDType == "RGB") {
+                                        %>LedAction('RGB', '<%- Name %>', 'RGB 255,255,255');socket.emit('init', JSON.stringify({type: 'RGB', LED: '<%- Name %>', set: '255,255,255'}));<% 
+                                    } else {
+                                        %>LedAction('<%- LEDType %>', '<%- Name %>', 'power on');socket.emit('init', JSON.stringify({type: '<%- LEDType %>', LED: '<%- Name %>', set: 'power on'}));<%
+                                    }
+                                });
+                            });%>" class="button is-success">On</button>
                             <button onclick="socket.emit('Queue', 'reset');<%
-                            LEDs.IRRGB.forEach(LED => {
-                                %>LedAction('<%- LED %>', 'power off');<%
-                            });
-                            LEDs.RGB.forEach(LED => {
-                                %>LedAction('<%- LED %>', 'RGB 0,0,0');<%
-                            });
-                            LEDs.Single.forEach(LED => {
-                                %>LedAction('<%- LED %>', 'power off');<%
-                            }); %>" class="button is-danger">Off</button>
+                            Object.keys(LEDs).forEach((LEDType) => {
+                                LEDs[LEDType].forEach((Name) => {
+                                    if(LEDType == "RGB") {
+                                        %>LedAction('RGB', '<%- Name %>', 'RGB 0,0,0');socket.emit('init', JSON.stringify({type: 'RGB', LED: '<%- Name %>', set: '0,0,0'}));<%
+                                    } else {
+                                        %>LedAction('<%- LEDType %>', '<%- Name %>', 'power off');socket.emit('init', JSON.stringify({type: '<%- LEDType %>', LED: '<%- Name %>', set: 'power off'}));<%
+                                    }
+                                });
+                            });%>" class="button is-danger">Off</button>
                         </div>
                     </div>
                 </div>
@@ -87,18 +88,13 @@ var LEDControllers = 0;
                 }));
             }
 
-            function LedAction(LED, action, shortcut = false) {
-                if(shortcut) {
-                    socket.emit("action", JSON.stringify({
-                        LED: "IR",
-                        shortcut: LED+action
-                    }));
-                } else {
-                    socket.emit("action", JSON.stringify({
-                        LED: "IR",
-                        action: LED+" "+action
-                    }));
-                }
+            function LedAction(LEDType, LED, action, shortcut = false, button = false) {
+                socket.emit(LEDType+"."+LED, JSON.stringify({
+                    action: action,
+                    LED: LEDType,
+                    Name: LED,
+                    shortcut: shortcut
+                }));
             }
             socket.on("response", data => {
                 document.getElementById("RGBColor").innerHTML = data

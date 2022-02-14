@@ -39,7 +39,6 @@ process.on("message", function (message) {
   console.log(`Message from main.js: ${message}`);
 });
 
-// var sessionStore = new MySQLStore({}, connection.promise());
 const sessionStore = new SequelizeStore({
   db: sequelize,
 });
@@ -234,5 +233,6 @@ app.get('*', auth, function(req, res){
 
 app.set('port', config.config.get().port);
 server.listen(app.get('port'), () => {
+  require("./src/SocketController");
   console.log("The LEDController server is running on port:", app.get("port"))
 });
