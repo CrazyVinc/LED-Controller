@@ -2,11 +2,17 @@ var cp = require("child_process");
 var os = require("os");
 const http = require('https');
 const fs = require('fs');
+const readline = require('readline');
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
 
-const axios = require("axios").default;
-const prompt = require('prompt');
-
-prompt.start();
+function ask(Question) {
+    return new Promise((resolve, reject) => {
+        rl.question((Question || "?")+": ", (input) => resolve(input) );
+    });
+}
 
 let AutoUpdaterCron;
 let config;
@@ -29,18 +35,49 @@ async function init2() {
         }
     }
     console.log("Getting Remote Hash...");
-    const res = await axios.post(AutoUpdater.URL, {
-        hash: AutoUpdater.hash
-      }).catch(function(err){
-         return {error: true, ...err}; 
-      });
+
+    const data = new TextEncoder().encode(
+        JSON.stringify({
+            hash: AutoUpdater.hash
+        })
+    )
+    const autoUpdateURL = new URL(AutoUpdater.URL);
+    if(autoUpdateURL.port == '') {
+        if(autoUpdateURL.protocol == "https:") autoUpdateURL.port = 443;
+        else autoUpdateURL.port = 80;
+    }
+    const options = {
+        hostname: autoUpdateURL.hostname,
+        port: autoUpdateURL.port,
+        path: autoUpdateURL.pathname,
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': data.length
+        }
+    }
+
+    const req = http.request(options, response => {
+        var str = ''
+        response.on('data', function (chunk) {
+          str += chunk;
+        });
+      
+        response.on('end', function () {
+            init3(JSON.parse(str));
+        });
+    });
+    req.write(data);
+    req.end();
+}
+async function init3(res) {
     if (res.error) {
         console.error("Error getting checksum. do you have internet?");
         console.error("Giving up...");
         console.error(res);
         return;
     }
-    Remotehash = res.data.hash;
+    Remotehash = res.hash;
     console.log("Server: " + Remotehash);
     console.log("Local:  " + Localhash);
 
@@ -48,7 +85,7 @@ async function init2() {
         console.log("Uptodate!");
         return;
     } else if(Remotehash == null) {
-        console.log("The update server is at this moment not stable to provide you a update.");
+        console.log("The provided update server has serving updates currently disabled.");
         return;
     } else {
         console.log("Update found!");
@@ -91,16 +128,17 @@ function runUpdater() {
     }
     if(platform == "windows") arch = arch+".exe"; // 32 Bit requires administration rights
     var updater = "Updater/Updater-"+platform+"-"+arch;
+    var updaterR = "Updater/RUN.Updater-"+platform+"-"+arch;
     if(fs.existsSync(updater)) {
         console.log("Compiled updater found! Making ready for starting the updater.");
-        fs.copyFile(updater, "RUN."+updater, (err) => {
+        fs.copyFile(updater, updaterR, (err) => {
             if (err) {
                 console.warn("There was a error while making ready for executing the updater:", err);
                 return err;
             }
             process.send(JSON.stringify({
                 msg: "update available!",
-                exec: "RUN."+updater
+                exec: updaterR
             }));
         });
     } else {
@@ -124,39 +162,67 @@ var download = function(url, dest, cb) {
 
 
 async function init() {
-if(require.main === module || !fs.existsSync('./config.json')) {
-    console.log("Setup:")
-    const Setup = await prompt.get(['SerialPort', 'WebPort']);
-    console.log("Database Setup:")
-    const DBSetup = await prompt.get(['hostname', 'user', 'password', 'database']);
+    if(require.main === module || !fs.existsSync('./config.json')) {
+        var resultT = {"DB":{}};
+        console.log("Setup");
+        await ask("Which SerialPort must be used")
+        .then((answer) => {
+            console.log(answer);
+            resultT["SerialPort"] = answer;
+            return ask("On which port must the website run");
+        }).then((answer) => {
+            console.log(answer);
+            resultT["WebPort"] = answer;
+            return ask("Database Hostname");
+        }).then(answer => {
+            console.log(answer);
+            console.log("Database Setup");
+            resultT["DB"]["hostname"] = answer;
+            return ask("Database username");
+        }).then(answer => {
+            console.log(answer);
+            resultT["DB"]["user"] = answer;
+            return ask("Database password");
+        }).then(answer => {
+            console.log(answer);
+            resultT["DB"]["password"] = answer;
+            return ask("Database name");
+        }).then(answer => {
+            console.log(answer);
+            resultT["DB"]["database"] = answer;
+            rl.close();
+        }).then(() => {
+            console.log(resultT);
+        });
+
         rawdata = JSON.stringify({
-            "SerialPort": Setup.SerialPort,
+            "SerialPort": resultT.SerialPort,
             "AutoUpdater": true,
-            "port": Setup.WebPort,
+            "port": resultT.WebPort,
             "DB": {
-            "hostname": DBSetup.hostname,
-            "user" : DBSetup.user,
-            "password" : DBSetup.password,
-            "database" : DBSetup.database
+                "hostname": resultT.DB.hostname,
+                "user" : resultT.DB.user,
+                "password" : resultT.DB.password,
+                "database" : resultT.DB.database
             },
             "Events": {
-            "SunSet": {
-                "enabled": true,
-                "Color": "white",
-                "Brightness": 6,
-                "criteria": {
-                "type": "Web API",
-                "API": {
-                    "URL": "https://api.sunrise-sunset.org/json?lat=52.065150&lng=4.532130&formatted=0",
-                    "type": "JSON"
-                },
-                "if": "results.sunset >= {$TimeNow}",
-                "Recheck": {
-                    "type": "hour",
-                    "count": "1"
+                "SunSet": {
+                    "enabled": true,
+                    "Color": "white",
+                    "Brightness": 6,
+                    "criteria": {
+                        "type": "Web API",
+                        "API": {
+                            "URL": "https://api.sunrise-sunset.org/json?lat=52.065150&lng=4.532130&formatted=0",
+                            "type": "JSON"
+                        },
+                        "if": "results.sunset >= {$TimeNow}",
+                        "Recheck": {
+                            "type": "hour",
+                            "count": "1"
+                        }
+                    }
                 }
-                }
-            }
             }
         });
         fs.writeFile('./config.json', rawdata, err => {
@@ -165,9 +231,9 @@ if(require.main === module || !fs.existsSync('./config.json')) {
             }
         })
         init2();
-} else {
-    init2();
-}
+    } else {
+        init2();
+    }
 }
 init();
 exports.update = init;

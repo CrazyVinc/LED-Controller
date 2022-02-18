@@ -3,7 +3,6 @@ var convict = require('convict');
 var path = require('path');
 
 var path2 = path.resolve(__dirname+"/..");
-console.log(path);
 var config = convict(path2+"/config-schema.json");
 config.loadFile(path2+'/config.json');
 config.validate();

@@ -119,6 +119,7 @@ app.post('/update', async(req, res) => {
 });
 
 app.get('/update', async(req, res) => {
+  if(config.config.get('Other.UpdateServer')) {
     var archive = archiver('zip', {
       zlib: { level: 9 } // Sets the compression level.
     });
@@ -163,6 +164,9 @@ app.get('/update', async(req, res) => {
     }
 
     archive.finalize();
+  } else {
+    res.send({error: true, msg: "Updates are currently disabled."});
+  }
 });
 
 app.get('/', function(req, res) {
