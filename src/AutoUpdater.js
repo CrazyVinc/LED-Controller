@@ -27,7 +27,6 @@ var Localhash = AutoUpdater.hash;
 if(AutoUpdater.TMPhash !== undefined) {
     Localhash = AutoUpdater.TMPhash;
     AutoUpdater.hash = AutoUpdater.TMPhash;
-    delete AutoUpdater.TMPhash;
     fs.writeFile(
         "./AutoUpdater.json",
         JSON.stringify(AutoUpdater),
