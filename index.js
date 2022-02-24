@@ -96,21 +96,22 @@ var auth = async (req, res, next) => {
 };
 
 app.post('/update', async(req, res) => {
-  // if(req.body.hash !== undefined) {
-  //   res.send("No Hash received!");
-  //   return;
-  // }
   if(config.config.get('Other.UpdateServer')) {
+    let Installer = JSON.parse(fs.readFileSync('./installer.json', 'utf8'));
     await hashFiles({
-      "files": config.AutoUpdater.options.FilesForHash
-      }, async(error, hash) => {
-      config.AutoUpdater.options.hash = hash;
-      fs.writeFile('./AutoUpdater.json', JSON.stringify(config.AutoUpdater.options), function (err) {
-        if (err) throw err;
-        console.log('AutoUpdater.json is updated!');
-        config.ReloadUpdater();
-      });
-      res.send({hash: hash});
+      "files": Installer.FilesForHash
+    }, async(error, hash) => {
+        config.AutoUpdater.options.hash = hash;
+          fs.writeFile('./AutoUpdater.json', JSON.stringify(config.AutoUpdater.options), function (err) {
+            if (err) {
+              res.send({hash: hash});
+              console.warn(err);
+              return;
+            };
+            console.log('AutoUpdater.json is updated!', hash);
+            config.ReloadUpdater();
+            res.send({hash: hash});
+          });
     });
   } else {
     console.log("Requested update is canceled.")
@@ -139,28 +140,33 @@ app.get('/update', async(req, res) => {
     //this is the streaming magic
     archive.pipe(res);
 
-    var files = [
-      __dirname + '/AutoUpdater.json',
-      __dirname + '/index.js',
-      __dirname + '/config-schema.json',
-      __dirname + '/package.json'
-    ];
+    let Installer = JSON.parse(fs.readFileSync('./installer.json', 'utf8'));
+    var files = [];
+    var directories = [];
 
+    
+    Installer["DL"]["files"].forEach(file => {
+      files.push(__dirname + file);
+    });;
+
+    Installer["DL"]["directories"].forEach(dir => {
+      directories.push(__dirname + dir);
+    });;
+    
     for(var i in files) {
-      archive.file(files[i], { name: path.basename(files[i]) });
+      if(req.query.v !== undefined) {
+        archive.file(files[i], { name: "LED-Controller-master/"+path.basename(files[i]) });
+      } else {
+        archive.file(files[i], { name: path.basename(files[i]) });
+      }
     }
 
-    var directories = [
-      __dirname + '/views',
-      __dirname + '/src',
-      __dirname + '/routes',
-      __dirname + '/assets',
-      __dirname + '/migrations',
-      __dirname + '/models',
-    ]
-
     for(var i in directories) {
-      archive.directory(directories[i], directories[i].replace(__dirname + '/', ''));
+      if(req.query.v !== undefined) {
+        archive.directory(directories[i], "LED-Controller-master/"+directories[i].replace(__dirname + '/', ''));
+      } else {
+        archive.directory(directories[i], directories[i].replace(__dirname + '/', ''));
+      }
     }
 
     archive.finalize();

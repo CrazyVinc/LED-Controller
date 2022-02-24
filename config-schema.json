@@ -75,5 +75,43 @@
             "format": "Boolean",
             "default": false
         }
+    },
+    "components": {
+        "version": {
+            "doc": "The version of the Led Controller",
+            "format": "String",
+            "default": "0.0.1"
+        },
+        "AutoUpdater": {
+            "version": {
+                "doc": "The version of the AutoUpdater",
+                "format": "String",
+                "default": "0.0.1"
+            },
+            "Update": {
+                "URL": {
+                    "doc": "The url for downloading the update",
+                    "format": "String",
+                    "default": "https://codeload.github.com/VLGNL/LED-Controller/zip/refs/heads/master"
+                },
+                "METHOD": {
+                    "doc": "The method used for the request (POST / GET)",
+                    "format": "String",
+                    "default": "GET"
+                }
+            },
+            "RemoteVersion": {
+                "URL": {
+                    "doc": "The url where to get the version of the AutoUpdater",
+                    "format": "String",
+                    "default": "https://api.github.com/repos/vlgnl/LED-Controller/git/refs/heads/master"
+                },
+                "METHOD": {
+                    "doc": "The method used for the request (POST / GET)",
+                    "format": "String",
+                    "default": "GET"
+                }
+            }
+        }
     }
 }
