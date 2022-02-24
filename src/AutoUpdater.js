@@ -14,15 +14,15 @@ function ask(Question) {
     });
 }
 
-let AutoUpdaterCron;
-let config;
+var AutoUpdaterCron;
+var config;
 if (require.main !== module) {
     config = require("./ConfigManager").config;
     AutoUpdaterCron = require("./CronJobs").AutoUpdaterCron;
 }
 
-let AutoUpdater = JSON.parse(fs.readFileSync("./AutoUpdater.json", "utf8"));
-let Remotehash;
+var AutoUpdater = JSON.parse(fs.readFileSync("./AutoUpdater.json", "utf8"));
+var Remotehash;
 var Localhash = AutoUpdater.hash;
 if (AutoUpdater.TMPhash !== undefined) {
     Localhash = AutoUpdater.TMPhash;
@@ -36,7 +36,7 @@ if (AutoUpdater.TMPhash !== undefined) {
         }
     );
 }
-let install = false;
+var install = false;
 var components = {
     version: "0.0.1",
     AutoUpdater: {
