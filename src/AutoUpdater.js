@@ -24,9 +24,10 @@ if (require.main !== module) {
 let AutoUpdater = JSON.parse(fs.readFileSync("./AutoUpdater.json", "utf8"));
 let Remotehash;
 var Localhash = AutoUpdater.hash;
-if(AutoUpdater.TMPhash !== undefined) {
+if (AutoUpdater.TMPhash !== undefined) {
     Localhash = AutoUpdater.TMPhash;
     AutoUpdater.hash = AutoUpdater.TMPhash;
+    delete AutoUpdater.TMPhash;
     fs.writeFile(
         "./AutoUpdater.json",
         JSON.stringify(AutoUpdater),
@@ -181,22 +182,24 @@ function runUpdater() {
             }
 
             AutoUpdater.TMPhash = Remotehash;
-            fs.writeFile(
-                "./AutoUpdater.json",
-                JSON.stringify(AutoUpdater),
-                function (err) {
-                    if (err) throw err;
-                    console.log("AutoUpdater.json is updated!");
-                    setTimeout(() => {
-                        process.send(
-                            JSON.stringify({
-                                msg: "update available!",
-                                exec: updaterR,
-                            })
-                        );
-                    }, 500);
-                }
-            );
+            setTimeout(() => {
+                fs.writeFile(
+                    "./AutoUpdater.json",
+                    JSON.stringify(AutoUpdater),
+                    function (err) {
+                        if (err) throw err;
+                        console.log("AutoUpdater.json is updated!");
+                        setTimeout(() => {
+                            process.send(
+                                JSON.stringify({
+                                    msg: "update available!",
+                                    exec: updaterR,
+                                })
+                            );
+                        }, 500);
+                    }
+                );
+            }, 500);
         });
     } else {
         console.log("???", updater);
