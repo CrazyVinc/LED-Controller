@@ -51,6 +51,88 @@ var components = {
     },
 };
 
+if (!fs.existsSync("temp")){
+    fs.mkdirSync("temp");
+}
+if (!fs.existsSync("./installer.json")) {
+    fs.writeFile("./installer.json", JSON.stringify({
+        "DL": {
+            "files": [
+                "/installer.json"
+            ]
+        },
+    }), (err) => {
+        if (err) {
+            console.error(err);
+        }
+    });
+}
+
+if (!fs.existsSync("./index.js")) {
+    var index = 'const fs = require("fs");\
+    var os = require("os");\
+    function platform2() {\
+        var platform = os.platform();\
+        if (platform == "win32") {\
+            return "windows";\
+        } else if (platform == "haiku") {\
+            return "NoSupport";\
+        } else if (platform == "android") {\
+            return "NoSupport";\
+        } else {\
+            return platform;\
+        }\
+    }\
+    function arch2() {\
+        var arch = os.arch();\
+        if (arch == "x64") {\
+            return "amd64";\
+        } else if (arch == "x32") {\
+            return "386";\
+        } else {\
+            return arch;\
+        }\
+    }\
+    var platform = platform2(); \
+    var arch = arch2(); \
+    if (platform == "NoSupport" || arch == "NoSupport") { \
+        console.log("Canceling update.");\
+        console.log("No AutoUpdater found for this platform!");\
+        return;\
+    }\
+    if (platform == "windows") arch = arch + ".exe"; \
+    var updater = "Updater/Updater-" + platform + "-" + arch;\
+    var updaterR = "Updater/RUN.Updater-" + platform + "-" + arch;\
+    if (fs.existsSync(updater)) {\
+        console.log(\
+            "Compiled updater found! Making ready for starting the updater."\
+        );\
+        fs.copyFile(updater, updaterR, (err) => {\
+            if (err) {\
+                console.warn(\
+                    "There was a error while making ready for executing the updater:",\
+                    err\
+                );\
+                return err;\
+            }\
+            process.send(\
+                JSON.stringify({\
+                    msg: "update available!",\
+                    exec: updaterR,\
+                })\
+            );\
+        });\
+    } else {\
+        console.log("???", updater);\
+    }' // used for running the installer to finish installing.
+    fs.writeFile(
+        "./index.js",
+        index,
+        function (err) {
+            if (err) throw err;
+        }
+    );
+}
 async function init2() {
     if (require.main !== module) {
         if (!config.get().AutoUpdater) {
@@ -190,27 +272,23 @@ function runUpdater() {
                         if (err) throw err;
                         console.log("AutoUpdater.json is updated!");
                         setTimeout(() => {
-                            update(updaterR)
-                        }, 5000);
+                            process.send(
+                                JSON.stringify({
+                                    msg: "update available!",
+                                    exec: updaterR,
+                                })
+                            );
+                        }, 500);
                     }
                 );
-            }, 5000);
+            }, 250);
         });
     } else {
         console.log("???", updater);
     }
 }
-function update(updaterR) {
-    process.send(
-        JSON.stringify({
-            msg: "update available!",
-            exec: updaterR,
-        })
-    );
-}
 
 var download = function (url, dest, cb) {
-    console.log(url);
     var file = fs.createWriteStream(dest);
     const options = {
         method: components.AutoUpdater.Update.METHOD,
