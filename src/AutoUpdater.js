@@ -23,7 +23,7 @@ if (require.main !== module) {
 
 var AutoUpdater = JSON.parse(fs.readFileSync("./AutoUpdater.json", "utf8"));
 var Remotehash;
-var Localhash = AutoUpdater.hash;
+var Localhash;
 if (AutoUpdater.TMPhash !== undefined) {
     Localhash = AutoUpdater.TMPhash;
     AutoUpdater.hash = AutoUpdater.TMPhash;
@@ -35,6 +35,8 @@ if (AutoUpdater.TMPhash !== undefined) {
             if (err) throw err;
         }
     );
+} else {
+    Localhash = AutoUpdater.hash;
 }
 var install = false;
 var components = {
