@@ -1,0 +1,29 @@
+{
+    "DL": {
+        "files": [
+            "/AutoUpdater.json",
+            "/config-schema.json",
+            "/index.js",
+            "/installer.json",
+            "/package.json"
+        ],
+        "directories": [
+            "/assets",
+            "/migrations",
+            "/models",
+            "/routes",
+            "/src",
+            "/views",
+            "/Updater"
+        ]
+    },
+    "FilesForHash": [
+        "./src/**",
+        "./views/**",
+        "./routes/**",
+        "./package.json",
+        "./index.js",
+        "./models",
+        "./migrations"
+    ]
+}
