@@ -115,7 +115,7 @@ app.post('/update', async(req, res) => {
     });
   } else {
     console.log("Requested update is canceled.")
-    res.send({hash: null, UpdateServer: false});
+    res.send({error: true, hash: null, UpdateServer: false});
   }
 });
 

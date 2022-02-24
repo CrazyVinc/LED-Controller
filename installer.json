@@ -1,7 +1,6 @@
 {
     "DL": {
         "files": [
-            "/AutoUpdater.json",
             "/config-schema.json",
             "/index.js",
             "/installer.json",

@@ -25,7 +25,6 @@ var AutoUpdater = JSON.parse(fs.readFileSync("./AutoUpdater.json", "utf8"));
 var Remotehash;
 var Localhash = AutoUpdater.hash;
 if (AutoUpdater.TMPhash !== undefined) {
-    if(Localhash !== AutoUpdater.TMPhash) {
         Localhash = AutoUpdater.TMPhash;
         AutoUpdater.hash = AutoUpdater.TMPhash;
         delete AutoUpdater.TMPhash;
@@ -36,7 +35,6 @@ if (AutoUpdater.TMPhash !== undefined) {
                 if (err) throw err;
             }
         );
-}
 }
 var install = false;
 var components = {
@@ -192,20 +190,23 @@ function runUpdater() {
                         if (err) throw err;
                         console.log("AutoUpdater.json is updated!");
                         setTimeout(() => {
-                            process.send(
-                                JSON.stringify({
-                                    msg: "update available!",
-                                    exec: updaterR,
-                                })
-                            );
-                        }, 500);
+                            update(updaterR)
+                        }, 5000);
                     }
                 );
-            }, 500);
+            }, 5000);
         });
     } else {
         console.log("???", updater);
     }
+}
+function update(updaterR) {
+    process.send(
+        JSON.stringify({
+            msg: "update available!",
+            exec: updaterR,
+        })
+    );
 }
 
 var download = function (url, dest, cb) {
