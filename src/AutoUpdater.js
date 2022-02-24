@@ -23,20 +23,20 @@ if (require.main !== module) {
 
 var AutoUpdater = JSON.parse(fs.readFileSync("./AutoUpdater.json", "utf8"));
 var Remotehash;
-var Localhash;
+var Localhash = AutoUpdater.hash;
 if (AutoUpdater.TMPhash !== undefined) {
-    Localhash = AutoUpdater.TMPhash;
-    AutoUpdater.hash = AutoUpdater.TMPhash;
-    delete AutoUpdater.TMPhash;
-    fs.writeFile(
-        "./AutoUpdater.json",
-        JSON.stringify(AutoUpdater),
-        function (err) {
-            if (err) throw err;
-        }
-    );
-} else {
-    Localhash = AutoUpdater.hash;
+    if(Localhash !== AutoUpdater.TMPhash) {
+        Localhash = AutoUpdater.TMPhash;
+        AutoUpdater.hash = AutoUpdater.TMPhash;
+        delete AutoUpdater.TMPhash;
+        fs.writeFile(
+            "./AutoUpdater.json",
+            JSON.stringify(AutoUpdater),
+            function (err) {
+                if (err) throw err;
+            }
+        );
+}
 }
 var install = false;
 var components = {
