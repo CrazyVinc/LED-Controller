@@ -30,13 +30,14 @@ ws().on('connection', async (socket) => {
 
     asyncForEach(Object.keys(config.get()["LEDs"]), async (key) => {
         asyncForEach(config.get()["LEDs"][key], async (key2) => {
-            if(Arduino.LastDataJSON[key2] === undefined) return;
-            if(key == "RGB") {
-                socket.emit(key+"."+key2, key2+" "+Arduino.LastDataJSON[key2] || "0,0,0");
-                socket.emit("init.RGB."+key2, Arduino.LastDataJSON[key2].substr(4) || "0,0,0");
-            } else {
-                socket.emit(key+"."+key2, key2+" "+Arduino.LastDataJSON[key2] || "power off");
-                socket.emit("init."+key+"."+key2, Arduino.LastDataJSON[key2] || "power off");
+            if(Arduino.LastDataJSON[key2] !== undefined) {
+                if(key == "RGB") {
+                    socket.emit(key+"."+key2, key2+" "+Arduino.LastDataJSON[key2] || "0,0,0");
+                    socket.emit("init.RGB."+key2, Arduino.LastDataJSON[key2].substr(4) || "0,0,0");
+                } else {
+                    socket.emit(key+"."+key2, key2+" "+Arduino.LastDataJSON[key2] || "power off");
+                    socket.emit("init."+key+"."+key2, Arduino.LastDataJSON[key2] || "power off");
+                }
             }
             socket.on("init", async (msg) => {
                 // socket.emit('init', JSON.stringify({type: '*', LED: '*', set: {%- Name %>: "0,0,0"}}))
