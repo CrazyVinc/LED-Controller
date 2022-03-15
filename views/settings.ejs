@@ -1,46 +1,213 @@
 <!DOCTYPE html>
-<html>
-	<head>
-        <%- include("./includes/head.ejs", {Page: "Settings"}) %>
-	</head>
-	<body>
-        <%- include("includes/nav") %>
-        <div class="container is-fluid">
-            <div class="columns">
-                <div class="column">
-                    a
-                </div>
-                <div class="column">
-                    Second column
-                </div>
-                <div class="column">
-                    Third column
-                </div>
-                <div class="column">
-                    Fourth column
-                </div>
-            </div>
-            <div class="columns">
-                <div class="column">
-                    <input type="text" id="TimeSel"/>
-                </div>
-                <div class="column">
-                sw
-                </div>
-                <div class="column">
-                w
-                </div>
-            </div>
-            <input type="text" id="myID">
+
+<head>
+    <%- include("./includes/head.ejs", {Page: "Settings"}) %>
+    <script src="/assets/FontAwesome.Pro.6.0.0.Beta1/web/js/fontawesome.min.js"></script>
+    <script src="/assets/FontAwesome.Pro.6.0.0.Beta1/web/js/solid.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css"
+        integrity="sha512-uf06llspW44/LZpHzHT6qBOIVODjWtv4MxCricRxkzvopAlSWnTf6hpZTFxuuZcuNE9CBQhqE0Seu1CoRk84nQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/midnight.min.css"
+        integrity="sha512-ZTF0X2l7PXEFDyP+MSOK0QM3Qh+C+lQ70Tqx4vQb3+6Uxh2lYkwmbSbpDmksZaX8w0sSz8ctVBnPSzAR1TQlzA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.min.css"
+        integrity="sha512-OmcLQEy8iGiD7PSm85s06dnR7G7C9C0VqahIPAj/KHk5RpOCmnC6R2ob1oK4/uwYhWa9BF1GC6tzxsC8TIx7Jg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/lint/lint.min.css"
+        integrity="sha512-jP1+o6s94WQS9boYeDP3Azh8ihI5BxGgBZNjkABhx05MqH5WuDzfzSnoPxGxVzWi/gxxVHZHvWkdRM6SMy5B0Q=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"
+        integrity="sha512-xwrAU5yhWwdTvvmMNheFn9IyuDbl/Kyghz2J3wQRDR8tyNmT8ZIYOd0V3iPYY/g4XdNPy0n/g0NvqGu9f0fPJQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"
+        integrity="sha512-IS1FyxQkiJHT1SAvLXBaJu1UTFSIw0GT/DuzxHl69djqyLoEwGmR2davcZUnB8M7ppi9nfTGZR/vdfqmWt+i6A=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.min.js"
+        integrity="sha512-kCn9g92k3GM90eTPGMNwvpCAtLmvyqbpvrdnhm0NMt6UEHYs+DjRO4me8VcwInLWQ9azmamS1U1lbQV627/TBQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/javascript-hint.min.js"
+        integrity="sha512-HB0sEfERI4Pe2z7rbx7JVGS0SEEGbnAbV+9X0bs3Hs9R/nCYartwJQg16bK1P0jPsMzbiXjT+kYNHYLCsHQ8HA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/lint/lint.min.js"
+        integrity="sha512-uVoZbG/kkAWc+ceMzfYqsyI2ONb5qMV0nc1UZ8gOvuDuc0EWt8VcXg3fWR7z1EIpn4yyWSEeK9lmrR30VSpYLQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/lint/javascript-lint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/lint/json-lint.min.js"
+        integrity="sha512-40xVcCik6TlUiZadnRc6ZM0BN65s7F+C3K7eBqGRf8dmjKApjzoiT/GB1GJmdICOZbXjJCiTBbVlsIvFs8A/+Q=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script src="/assets/js/jshint.js"></script>
+</head>
+
+<body>
+    <%- include("includes/nav") %>
+    <div class="container is-fluid">
+        <div class="tabs is-boxed is-centered is-fullwidth">
+            <ul>
+                <li class="is-active" id="TabAll" onclick="SetTab(this);">
+                    <a>
+                        <span class="icon is-small"><i class="fas fa-image" aria-hidden="true"></i></span>
+                        <span>All (text)</span>
+                    </a>
+                </li>
+                <li id="TabLEDContr" onclick="SetTab(this);">
+                    <a>
+                        <span class="icon is-small"><i class="fas fa-music" aria-hidden="true"></i></span>
+                        <span>LED Controller</span>
+                    </a>
+                </li>
+                <li id="Arduino" onclick="SetTab(this);">
+                    <a>
+                        <span class="icon is-small"><i class="fas fa-music" aria-hidden="true"></i></span>
+                        <span>Arduino</span>
+                    </a>
+                </li>
+                <li id="Components" onclick="SetTab(this);">
+                    <a>
+                        <span class="icon is-small"><i class="fas fa-film" aria-hidden="true"></i></span>
+                        <span>Components</span>
+                    </a>
+                </li>
+                <li id="Plugins" onclick="SetTab(this);">
+                    <a>
+                        <span class="icon is-small"><i class="far fa-file-alt" aria-hidden="true"></i></span>
+                        <span>Plugins</span>
+                    </a>
+                </li>
+            </ul>
         </div>
-        <script>
-            flatpickr("#myID", {});
-            flatpickr("#TimeSel", {
-                enableTime: true,
-                enableSeconds: true,
-                noCalendar: true
-            });
-            // flatpickr("#myID", {});
-        </script>
-	</body>
+        <div class="columns">
+            <div class="column">
+                <div class="card" data-current="file">
+                    <header class="card-header">
+                        <p class="card-header-title">
+                            LED Controller Config
+                        </p>
+                        <button class="card-header-icon" aria-label="more options">
+                            <span class="icon">
+                                <i class="fas fa-angle-down" aria-hidden="true"></i>
+                            </span>
+                        </button>
+                    </header>
+                    <div class="card-content">
+                        <div class="content">
+                            <div id="editor"></div>
+                        </div>
+                    </div>
+                    <footer class="card-footer">
+                        <a onclick="ValidSend(this, (() => {sendChanges(myCodeMirror.getValue(' '))}));"
+                            class="card-footer-item">Upload</a>
+                        <a data-changeto="schema" onclick="SetEditor(this, (() => {
+                            }));" class="card-footer-item">Switch to Schema</a>
+                        <a href="#" class="card-footer-item">Reset to current</a>
+                        <!-- <a href="#" class="card-footer-item">Reset to Default</a> -->
+                    </footer>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        var Editors = {
+            config: {}
+        };
+
+        /* Checking if the current visible editor is the config */
+        function ValidSend(elm, cb) {
+            if (elm.parentNode.parentNode.dataset.current == "file") {
+                try {
+                    cb();
+                } catch (err) {
+                    bulmaToast.toast({
+                        message: `There is a error while trying to upload to the server!<br>Error: ${err}`, type: 'is-danger',
+                        "position": "top-center"
+                    })
+                }
+            } else {
+                bulmaToast.toast({
+                    message: 'Current open editor is read-only', type: 'is-warning',
+                    "position": "top-center"
+                })
+            }
+        }
+
+        /* Uppercase the first letter of a string */
+        function capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+
+
+        /* Change the current open editor */
+        function SetEditor(Editor, cb) {
+            const elm = {...Editor.dataset, ...Editor.parentNode.parentNode.dataset};
+            console.log(elm)
+            Editors.config[elm.current] = myCodeMirror.getValue().toString();
+            myCodeMirror.doc.setValue(Editors.config[elm.changeto].toString());
+            Editor.dataset.changeto = elm.current;
+            Editor.parentNode.parentNode.dataset.current = elm.changeto;
+            Editor.innerText = `Switch to ${capitalizeFirstLetter(elm.current)}`;
+        }
+
+        /* using the API with XMLHttpRequest */
+        function API(url, cb = console.log) {
+            var xhr = new XMLHttpRequest();
+
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4) {
+                    cb(JSON.parse(xhr.response));
+                }
+            }
+
+            xhr.open('GET', "/api/" + url, true);
+            xhr.send('');
+        }
+
+        /* Used to send changes to the server */
+        function sendChanges(Data, cb = console.log) {
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", '/upload/config', true);
+
+            //Send the proper header information along with the request
+            xhr.setRequestHeader("Content-Type", "application/json");
+
+            xhr.onreadystatechange = function () { // Call a function when the state changes.
+                if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+                    // cb(this)
+                    cb(xhr.responseText);
+                }
+            }
+            Data = JSON.parse(Data)
+            xhr.send(JSON.stringify(Data));
+
+        }
+
+        /* Change the tab if you click on a tab */
+        function SetTab(Tab) {
+            Tab.parentNode.getElementsByClassName("is-active")[0].classList.remove("is-active");
+            Tab.classList.add("is-active");
+
+        }
+
+        /* initializing the config editor */
+        var myCodeMirror = CodeMirror(document.getElementById('editor'), {
+            lineNumbers: true,
+            mode: "javascript",
+            gutters: ["CodeMirror-lint-markers"],
+            lint: true,
+            theme: "midnight",
+            value: "Loading..."
+        });
+
+        myCodeMirror.setSize(null, "75vh");
+
+        /* Reqeusting the config and config schema with a XMLHttpRequest */
+        API('settings', ((res) => {
+            Editors["config"]["file"] = res;
+            myCodeMirror.doc.setValue(JSON.stringify(res, null, 2));
+        }));
+        API('settings/schema', ((res) => {
+            Editors["config"]["schema"] = JSON.stringify(res, null, 2);
+        }));
+    </script>
+</body>
+
 </html>

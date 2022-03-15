@@ -7,34 +7,30 @@ var config = convict(path2+"/config-schema.json");
 config.loadFile(path2+'/config.json');
 config.validate();
 
-config.save = function() {
-	fs.writeFile(path2+'/config.json', config.toString(), function (err) {
+/* Save a new config object */
+config.save = function(obj) {
+	config.load(obj);
+	config.validate();
+	fs.writeFile(path2+'/config.json', JSON.stringify(obj, null, 2), function (err) {
 		if (err) console.warn(err);
 	});
-};
-config.saveSet = function() {
-	fs.writeFile(path2+'/config.json', config.toString(), function (err) {
-		if (err) console.warn(err);
-	});
+	config.reload;
 };
 
+/* Reload the config */
 config.reload = function() {
 	config.loadFile(path2+'/config.json');
+	config.getFileContent = fs.readFileSync(path2+'/config.json');
 }
 
-config.SaveReload = function() {
-	fs.writeFile(path2+'/config.json', config.toString(), function (err) {
-		if (err) console.warn(err);
-		config.loadFile(path2+'/config.json');
-	});
-}
-//config.save();
 const AutoUpdater = {
 	options: {},
 	set new(name) {
 		this.options = name;
 	},
 };
+
+config.getFileContent = fs.readFileSync(path2+'/config.json');
 
 function ReloadUpdater() {
     let rawdata = fs.readFileSync(path2+'/AutoUpdater.json');

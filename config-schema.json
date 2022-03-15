@@ -1,10 +1,11 @@
 {
     "SerialPort": {
-        "doc": "The port of the Serialbind.",
+        "doc": "The port of the Serialbind. Use null for automatic detection",
         "format": "*",
-        "default": "null",
+        "default": null,
         "env": "SERIAL",
-        "arg": "serial"
+        "arg": "serial",
+        "nullable": true
     },
     "AutoUpdater": {
         "doc": "Enable the auto updater?",
@@ -29,22 +30,26 @@
         "hostname": {
             "doc": "Database hostname/IP",
             "format": "String",
-            "default": "localhost"
+            "default": "localhost",
+            "sensitive": true
         },
         "user": {
             "doc": "Database Username",
             "format": "String",
-            "default": "root"
+            "default": "root",
+            "sensitive": true
         },
         "password": {
             "doc": "Database password",
             "format": "String",
-            "default": ""
+            "default": "",
+            "sensitive": true
         },
         "database": {
             "doc": "Database name",
             "format": "String",
-            "default": "ledcontroller"
+            "default": "ledcontroller",
+            "sensitive": true
         }
     },
     "LEDs": {
@@ -80,7 +85,7 @@
         "version": {
             "doc": "The version of the Led Controller",
             "format": "String",
-            "default": "0.0.1"
+            "default": "0.0.2"
         },
         "AutoUpdater": {
             "version": {

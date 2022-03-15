@@ -1,1 +1,1 @@
-# My own LED Controller
+# Arduino LED Controller

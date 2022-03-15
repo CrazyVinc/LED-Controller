@@ -192,4 +192,13 @@ app.get("/GetFeed", async (req, res) => {
     res.send(Response);
 });
 
+
+app.get("/settings", async (req, res) => {
+    res.send(config.config.toString());
+});
+app.get("/settings/schema", async (req, res) => {
+    res.send(config.config.getSchemaString());
+});
+
+
 module.exports = app;
