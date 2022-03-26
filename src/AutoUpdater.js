@@ -54,6 +54,11 @@ var components = {
 if (!fs.existsSync("temp")){
     fs.mkdirSync("temp");
 }
+
+if (!fs.existsSync("Settings")){
+    fs.mkdirSync("Settings");
+}
+
 if (!fs.existsSync("./installer.json")) {
     fs.writeFile("./installer.json", JSON.stringify({
         "DL": {

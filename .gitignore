@@ -9,3 +9,5 @@ nodemon.json
 temp/update.zip
 config.json
 LastData.json
+temp
+Settings
