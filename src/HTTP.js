@@ -17,6 +17,7 @@ var CronJob = require('cron');
 
 const { socketConnection } = require('./SocketIO');
 const config = require('./ConfigManager');
+const AppCache = config.AppCache;
 const {connection, sequelize} = require("./Database");
 const { randomUUID } = require('crypto');
 
@@ -82,17 +83,10 @@ app.post('/update', async(req, res) => {
     await hashFiles({
       "files": Installer.FilesForHash
     }, async(error, hash) => {
-        config.AutoUpdater.options.hash = hash;
-          fs.writeFile('./AutoUpdater.json', JSON.stringify(config.AutoUpdater.options), function (err) {
-            if (err) {
-              res.send({hash: hash});
-              console.warn(err);
-              return;
-            };
-            console.log('AutoUpdater.json is updated!', hash);
-            config.ReloadUpdater();
-            res.send({hash: hash});
-          });
+      if(err) console.error(err);
+        console.log(AppCache.cache);
+        AppCache.cache.version.hash = hash;
+        res.send({hash: hash});
     });
   } else {
     console.log("Requested update is canceled.")
@@ -211,11 +205,11 @@ app.get('/control', auth, function(req, res) {
   res.render('control');
 });
 
-app.use('/modal', auth, require("../routes/modal"));
-app.use('/test', auth, require("../routes/test"));
-app.use('/new', auth, require("../routes/new"));
-app.use('/api', auth, require("../routes/api"));
-app.use('/upload', auth, require("../routes/upload"));
+app.use('/modal', auth, require("./routes/modal"));
+app.use('/test', auth, require("./routes/test"));
+app.use('/new', auth, require("./routes/new"));
+app.use('/api', auth, require("./routes/api"));
+app.use('/upload', auth, require("./routes/upload"));
 
 app.get('*', auth, function(req, res){
   res.status(404).render('errors', {error: {code: "404"}});

@@ -9,15 +9,15 @@ var CronVerify = require("cron-validate");
 
 const UUID = require("uuidv4");
 
-const Arduino = require("../src/ArduinoController");
-const { connection } = require("../src/Database");
-const CronJobs = require("../src/CronJobs");
-var models = require("../models");
+const Arduino = require("../ArduinoController");
+const { connection } = require("../Database");
+const CronJobs = require("../CronJobs");
+var models = require("../Database/models");
 
-var config = require("../src/ConfigManager");
-const { MySQL2ToSequelize } = require("../src/utils");
+var config = require("../ConfigManager");
+const { MySQL2ToSequelize } = require("../utils");
 
-const { sendMessage, ws } = require("../src/SocketIO");
+const { sendMessage, ws } = require("../SocketIO");
 
 var app = express.Router();
 

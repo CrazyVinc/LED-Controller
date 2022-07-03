@@ -4,41 +4,75 @@ var path = require('path');
 
 var path2 = path.resolve(__dirname+"/..");
 var config = convict(path2+"/config-schema.json");
+
+const merge = require("deepmerge");
+
+var { DeleteFromValue, overwriteMerge } = require('./utils');
+
 config.loadFile(path2+'/config.json');
-config.validate();
+config.getFileContent = fs.readFileSync(path2+'/config.json', 'utf8');
 
 /* Save a new config object */
-config.save = function(obj) {
-	config.load(obj);
-	config.validate();
-	fs.writeFile(path2+'/config.json', JSON.stringify(obj, null, 2), function (err) {
-		if (err) console.warn(err);
+function save(conf = config, PreFormated = false) {
+	console.log(conf.getFileContent, -48)
+	if(!PreFormated) {
+		var JSON_Conf = DeleteFromValue(JSON.parse(conf.toString()), "[Sensitive]");
+		JSON_Conf = merge(JSON.parse(conf.getFileContent), JSON_Conf, {
+			arrayMerge: overwriteMerge,
+		});
+	}
+	fs.writeFile(path2+'/config.json', JSON.stringify(JSON_Conf, null, 2), 'utf8', function (err) {
+		if (err) console.error(err);
+		// config.reload;
 	});
-	config.reload;
 };
+
+config.save = save
 
 /* Reload the config */
 config.reload = function() {
 	config.loadFile(path2+'/config.json');
-	config.getFileContent = fs.readFileSync(path2+'/config.json');
+	config.getFileContent = fs.readFileSync(path2+'/config.json', 'utf8');
 }
 
-const AutoUpdater = {
-	options: {},
-	set new(name) {
-		this.options = name;
+
+
+
+const AppCache = {
+	options: {
+		version: {}
+	},
+	get cache() {
+		return this.options;
+	},
+	set cache(val) {
+		this.options = val;
+	},
+	set new(val) {
+		this.options = val;
+		
+		fs.writeFileSync(`${path2}/data/cache/app.json`, JSON.stringify(val));
 	},
 };
 
-config.getFileContent = fs.readFileSync(path2+'/config.json');
-
-function ReloadUpdater() {
-    let rawdata = fs.readFileSync(path2+'/AutoUpdater.json');
-    AutoUpdater.new = JSON.parse(rawdata);
+try {
+	if (fs.existsSync(`${path2}/data/cache/app.json`)) {
+		AppCache.new = JSON.parse(fs.readFileSync(path2+'/data/cache/app.json'));
+	} else {
+		AppCache.new = {};
+	}
+} catch (error) {
+	AppCache.new = {};
+	console.error(error);
 }
 
-ReloadUpdater();
+
+function ReloadAppCache() {
+    let rawdata = fs.readFileSync(path2+'/data/cache/app.json');
+    AppCache.new = JSON.parse(rawdata);
+}
+
 module.exports = {
 	config,
-	AutoUpdater, ReloadUpdater
+	AppCache, ReloadAppCache
 }

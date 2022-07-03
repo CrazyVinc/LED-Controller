@@ -13,12 +13,11 @@ var CronVerify = require('cron-validate');
 
 const UUID = require('uuidv4');
 
-const Arduino = require("../src/ArduinoController");
-const { models } = require("../src/Database");
-const CronJobs = require("../src/CronJobs");
-const { verify, randomUUID } = require('crypto');
+const Arduino = require("../ArduinoController");
+const { models } = require("../Database");
+const CronJobs = require("../CronJobs");
 
-var config = require('../src/ConfigManager');
+var config = require('../ConfigManager');
 
 var app = express.Router();
 

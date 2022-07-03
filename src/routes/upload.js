@@ -11,10 +11,10 @@ const UUID = require('uuidv4');
 
 const merge = require('deepmerge')
 
-const Arduino = require("../src/ArduinoController");
-const { models } = require("../src/Database");
-const CronJobs = require("../src/CronJobs");
-var config = require('../src/ConfigManager');
+const Arduino = require("../ArduinoController");
+const { models } = require("../Database");
+const CronJobs = require("../CronJobs");
+var config = require('../ConfigManager');
 
 var app = express.Router();
 

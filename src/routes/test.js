@@ -1,8 +1,8 @@
 var express = require("express");
 const gradient = require('gradient-color');
 
-const Arduino = require("../src/ArduinoController");
-const {config} = require("../src/ConfigManager");
+const Arduino = require("../ArduinoController");
+const {config} = require("../ConfigManager");
 
 var app = express.Router();
 

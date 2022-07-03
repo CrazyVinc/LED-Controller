@@ -1,5 +1,3 @@
-require('console-stamp')(console, '[HH:MM:ss.l]');
-
 function RandomString(length) {
     var result           = '';
     var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -10,6 +8,27 @@ function RandomString(length) {
    }
    return result;
 }
+
+
+/* Delete keys with a specific Value */
+function DeleteFromValue(obj, Value) {
+  for (let k in obj) {
+    if (typeof obj[k] === "object") {
+      DeleteFromValue(obj[k], Value);
+    } else {
+      // base case, stop recurring
+      if(obj[k] == Value) {
+          delete obj[k];
+      }
+    }
+  }
+  try {
+      return JSON.parse(obj);
+  } catch (err) {
+      return obj;
+  }
+}
+
 
 async function asyncForEach(array, callback) {
   for (let index = 0; index < array.length; index++) {
@@ -70,6 +89,20 @@ async function MySQL2ToSequelize(result) {
   }
   return MySQL2Obj;
 }
+
+
+const overwriteMerge = (destinationArray, sourceArray, options) => sourceArray;
+
+function makeRecursiveObj(objRef, arry, initValue){
+  var obj = objRef, idx = 0;    
+  while(idx < arry.length -1){
+      if(!obj[arry[idx]]) obj[arry[idx]] = {};
+      obj = obj[arry[idx]];
+      idx++;
+  }
+  if(!obj[arry[idx]]) obj[arry[idx]] = initValue;
+}
+
 const RemoteCntrlColors = ["red", "green", "blue", "white", "scarlet", "Light Green", "periwinkle", "orange", "mint", "purple", "tangerine", "sky", "rose", "Yellow", "aqua", "pink"];
 module.exports = {
     asyncForEach: asyncForEach,
@@ -80,5 +113,8 @@ module.exports = {
     RemoteCntrlColors,
     capitalizeFirstLetter,
     MySQL2ToSequelize,
-    rgbToHex
+    rgbToHex,
+    makeRecursiveObj,
+    overwriteMerge,
+    DeleteFromValue,
 }

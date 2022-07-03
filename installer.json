@@ -1,5 +1,7 @@
 {
-    "DL": {
+    "downloadURL": "https://codeload.github.com/CrazyVinc/LED-Controller/zip/refs/heads/master",
+    "remoteJSON": "https://api.github.com/repos/CrazyVinc/LED-Controller/git/refs/heads/master",
+    "extract": {
         "files": [
             "/config-schema.json",
             "/index.js",
@@ -8,21 +10,14 @@
         ],
         "directories": [
             "/assets",
-            "/migrations",
-            "/models",
-            "/routes",
             "/src",
-            "/views",
-            "/Updater"
+            "/views"
         ]
     },
     "FilesForHash": [
         "./src/**",
         "./views/**",
-        "./routes/**",
         "./package.json",
-        "./index.js",
-        "./models",
-        "./migrations"
+        "./index.js"
     ]
 }

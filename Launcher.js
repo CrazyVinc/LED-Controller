@@ -1,67 +1,89 @@
 const { spawn, fork } = require("child_process");
 const fs = require('fs');
-let AutoUpdaterJSON = JSON.parse(fs.readFileSync('./AutoUpdater.json', 'utf8'));
 
-console.log("Starting Led Controller.");
+const LauncherVersion = 1.0;
 
-let AutoUpdater;
-let child;
-let AutoUpdater2;
-let child2;
-function update(updater) {
-    AutoUpdater = spawn(updater);
-    AutoUpdater.stdout.on('data', (data) => {
-      console.log(`stdout: ${data}`);
+var child = {};
+const Args = process.argv.slice(2);
+
+
+
+if(!fs.existsSync("./installer.json") || Args[0] == "setup") {
+    RunInstaller();
+} else {
+    checkInstalled();
+}
+
+
+function checkInstalled() {
+    child["isInstalled"] = spawn('npm', ['ls', '--json']);
+    
+    child["isInstalled"].on('close', (code) => {
+        if(code === 0) {
+            Controller();
+        } else {
+            console.log(`npm has not found al required modules. Starting installer`);
+            RunInstaller();
+        }
+    });
+}
+
+function runExtractor(path, arg = []) {
+    child["extractor"] = spawn(path, arg);
+    child["extractor"].stdout.on('data', (data) => {
+      console.log(`Extractor: ${data}`);
     });
     
-    AutoUpdater.stderr.on('data', (data) => {
-        console.error(`stderr: ${data}`);
+    child["extractor"].stderr.on('data', (data) => {
+        console.error(`Extractor: ${data}`);
     });
     
-    AutoUpdater.on('close', (code) => {
+    child["extractor"].on('close', (code) => {
       console.log(`Auto Updater exited with code ${code}`);
       Controller();
     });
 }
 
+
 function Controller() {
-    child = fork("./index.js");
-    // child.send("hoi");
-    child.on("message", function (msg) {
+    var killed = false;
+    child["controller"] = fork("./index.js", Args);
+    child["controller"].send({version: LauncherVersion});
+
+    child["controller"].on("message", function (msg) {
         msg = JSON.parse(msg) || {msg: msg};
-        if(msg.msg == "update available!") {
-            child.kill();
-            console.log("Updating..")
-            AutoUpdater = update(msg.exec);
+        if(msg.msg == "execute extractor!" && msg.exec && msg.args) {
+            runExtractor(msg.exec, msg.args);
+            killed = true;
+            child["controller"].kill();
         } else {
-            console.log(`Message from LED Controller: ${msg}`);
+            console.log(`LED Controller: ${msg}`);
         }
     });
-
-    child.on("close", function (code) {
-        console.log("Led Controller exited with code " + code);
+    
+    child["controller"].on("close", function (code) {
+        console.log("LED Controller exited with code " + code);
+        if(!killed) Controller();
     });
 }
 
-function UpdateCheck() {
-    child2 = fork("./src/AutoUpdater.js");
-    child2.on("message", function (msg) {
+function RunInstaller() {
+    var extractorstarted = false;
+    child["setup"] = fork("./src/setup.js", Args);
+    child["setup"].on("message", function (msg) {
         msg = JSON.parse(msg) || {msg: msg};
-        if(msg.msg == "update available!") {
-            console.log("Updating..")
-            AutoUpdater2 = update(msg.exec);
+        if(msg.msg == "execute extractor!" && msg.exec && msg.args) {
+            extractorstarted = true;
+            console.log("Extractor started!");
+            runExtractor(msg.exec, msg.args);
+            child["setup"].kill();
         } else {
-            console.log(`Message from LED Controller: ${msg}`);
+            console.log(`Installer: ${msg}`);
         }
     });
 
-    child2.on("close", function (code) {
-        console.log("Led Controller exited with code " + code);
+    child["setup"].on("close", function (code) {
+        // if(extractorstarted) Controller();
+        console.log("Installer with code " + code);
     });
-}
-
-if(AutoUpdaterJSON.install) {
-    UpdateCheck();
-} else {
-    Controller();
 }

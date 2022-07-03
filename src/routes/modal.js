@@ -9,11 +9,11 @@ var CronVerify = require('cron-validate');
 
 const UUID = require('uuidv4');
 
-const Arduino = require("../src/ArduinoController");
-const {connection} = require("../src/Database");
-const {RemoteCntrlColors, capitalizeFirstLetter} = require("../src/utils");
+const Arduino = require("../ArduinoController");
+const {connection} = require("../Database");
+const {RemoteCntrlColors, capitalizeFirstLetter} = require("../utils");
 
-var config = require('../src/ConfigManager');
+var config = require('../ConfigManager');
 
 var app = express.Router();
 

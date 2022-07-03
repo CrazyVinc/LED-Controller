@@ -11,3 +11,5 @@ config.json
 LastData.json
 temp
 Settings
+*.log
+data
