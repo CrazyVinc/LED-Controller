@@ -2,6 +2,7 @@ const {
   DataTypes
 } = require('sequelize');
 
+const useBcrypt = require('sequelize-bcrypt');
 module.exports = sequelize => {
   const attributes = {
     id: {
@@ -50,6 +51,25 @@ module.exports = sequelize => {
       comment: null,
       unique: true,
       field: "email"
+    },
+    meta: {
+      type: DataTypes.JSON(),
+      allowNull: true,
+      defaultValue: {}
+    },
+    active: {
+      type: DataTypes.BOOLEAN(),
+      allowNull: true,
+      defaultValue: true
+    },
+    meta: {
+      type: DataTypes.JSON(),
+      allowNull: true,
+      defaultValue: {}
+    },
+    last_login: {
+      type: DataTypes.DATE,
+      allowNull: true
     }
   };
   const options = {
@@ -58,5 +78,7 @@ module.exports = sequelize => {
     indexes: []
   };
   const AccountsModel = sequelize.define("accounts_model", attributes, options);
+  useBcrypt(AccountsModel);
+  
   return AccountsModel;
 };

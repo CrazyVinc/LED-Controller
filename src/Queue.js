@@ -1,7 +1,7 @@
 const PromiseQueue = require("easy-promise-queue").default;
 
 var { ws } = require("./SocketIO");
-const { config } = require("./ConfigManager.js");
+const { config, arduinoConfig } = require("./ConfigManager.js");
 
 let Queue = {};
 let IRRGB = new PromiseQueue({ concurrency: 1 });
@@ -9,7 +9,7 @@ let RGB = new PromiseQueue({ concurrency: 1 });
 let Single = new PromiseQueue({ concurrency: 1 });
 let general = new PromiseQueue({ concurrency: 1 });
 
-var LEDs = config.get("LEDs");
+var LEDs = arduinoConfig.get("LEDs");
 Object.keys(LEDs).forEach(function (type) {
     Queue[type] = {};
     LEDs[type].forEach((LED) => {

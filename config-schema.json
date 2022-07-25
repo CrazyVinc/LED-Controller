@@ -1,12 +1,4 @@
 {
-    "SerialPort": {
-        "doc": "The port of the Serialbind. Use null for automatic detection",
-        "format": "*",
-        "default": null,
-        "env": "SERIAL",
-        "arg": "serial",
-        "nullable": true
-    },
     "AutoUpdater": {
         "doc": "Enable the auto updater?",
         "format": "Boolean",
@@ -52,23 +44,6 @@
             "sensitive": true
         }
     },
-    "LEDs": {
-        "Single": {
-            "doc": "Define the command used to control the LED",
-            "format": "Array",
-            "default": []
-        },
-        "RGB": {
-            "doc": "Define the command used to control that RGB LED",
-            "format": "Array",
-            "default": []
-        },
-        "IRRGB": {
-            "doc": "Define the command used to control the specific IR LED",
-            "format": "Array",
-            "default": []
-        }
-    },
     "Other": {
         "Auth": {
             "doc": "Enable the inlog system",
@@ -86,6 +61,13 @@
             "doc": "The version of the Led Controller",
             "format": "String",
             "default": "0.0.2"
+        },
+        "Arduino": {
+            "PrebuildFirmware": {
+                "doc": "Use prebuild Firmware build specific for the LED Controller.",
+                "format": "Boolean",
+                "default": true
+            }
         },
         "AutoUpdater": {
             "version": {

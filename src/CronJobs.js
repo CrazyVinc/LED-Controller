@@ -1,7 +1,5 @@
 var path = require('path');
 
-require('console-stamp')(console, '[HH:MM:ss.l]');
-
 var mysql = require('mysql2');
 var CronJob = require('cron');
 var moment = require('moment');
@@ -16,7 +14,6 @@ const AutoUpdater = require("./AutoUpdater");
 
 const { randomUUID, randomInt } = require('crypto');
 const { asyncForEach, MySQL2ToSequelize }  = require("./utils");
-
 
 var TMP = {
     "init": false,
@@ -65,78 +62,6 @@ var LEDJobTracking = {};
 var Events = {};
 var Events2 = {};
 var JobsInit = {};
-
-var EventReload = new CronJob.CronJob('0 */5 * * * *', async () => {
-    ConfigControl.config.reload();
-    var options = ConfigControl.config.get();
-    asyncForEach(Object.entries(options.Events), async (Event) => {
-        if(!([Event[0]] in JobsInit)) {
-            JobsInit[Event[0]] = {"init": false};
-        }
-        if(Event[1].enabled) {
-            if(Events[Event[0]] === undefined) {
-                TMP = merge(TMP, {
-                    "RunTimeCalc": {
-                        [Event[0]]: {
-                            "RunTime": new Date(),
-                        }
-                    },
-                });
-
-                Events2[Event[0]] = new CronJob.CronJob('0 0 0 1 1 1', async () => {
-                    console.log(`Recheck Event for ${Event[0]}...`);
-                    TMP["RunTimeCalc"][Event[0]]["RunTime"] = new Date();
-                    if(Event[1].criteria.type == "Web API") {
-                        var response = await axios.get(Event[1].criteria.API.URL);
-                        var time = moment.utc(response.data.results.sunset).local();
-
-                        if(moment(time).isAfter(moment())) {
-                            Events[Event[0]].setTime(new CronJob.CronTime(moment(time)));
-                            console.log("Coming", moment(time).format("dddd, MMMM Do YYYY, HH:mm:ss"));
-                        } else {
-                            console.log("Past", moment(time).format("dddd, MMMM Do YYYY, HH:mm:ss"));
-                        }
-                    }
-                    TMP["RunTimeCalc"][Event[0]]["RunTime"] = new Date() - TMP["RunTimeCalc"][Event[0]]["RunTime"];
-                    console.log('Recheck Event completed: %dms', TMP["RunTimeCalc"][Event[0]]["RunTime"]);
-                    Events[Event[0]].start();
-                }, null, true, null, null, true);
-
-
-                Events[Event[0]] = new CronJob.CronJob('0 0 18 1 1 1', async () => {
-                    console.log(`Running Event for ${Event[0]}...`);
-                    LEDWakeUpEvent = new Date();
-                    if(Event[1].criteria.type == "Web API") {
-                        var Recheck = moment().add({
-                            [(Event[1].criteria.Recheck.type)]: (Event[1].criteria.Recheck.count)
-                        });
-                        
-                        Events2[Event[0]].setTime(new CronJob.CronTime(Recheck));
-                        if(JobsInit[Event[0]].init) {
-                            console.log("SunSet", -472);
-                            await Arduino.Write("bed power on");
-                            await Arduino.Write("pc rgb 255,255,255");
-                            await Arduino.Write("bed power on");
-                            await Arduino.Brightness(Event[1].Brightness);
-                            await Arduino.Write("bed color "+Event[1].Color);
-                        } else {
-                            JobsInit[Event[0]] = {"init": true};
-                        }
-                    }
-                    LEDWakeUpEvent = new Date() - LEDWakeUpEvent;
-                    console.log('Event completed: ' + LEDWakeUpEvent + 'ms');
-                }, null, false, null, null, true);
-            }
-        } else {
-            console.log("Deleting..");
-            Events[Event[0]].stop();
-            Events2[Event[0]].stop();
-            delete Events[Event[0]];
-            delete Events2[Event[0]];
-        }
-      });
-}, null, true, null, null, true);
-
 
 
 var LEDCrons = {
@@ -203,8 +128,8 @@ var LED2Cron = new CronJob.CronJob('0 */5 * * * *', async () => {
                 };
 
                 if(row.LedStrip == "*") {
-                    Object.keys(ConfigControl.config.get("LEDs")).forEach(function (key) {
-                        ConfigControl.config.get()["LEDs"][key].forEach(key2 => {
+                    Object.keys(ConfigControl.arduinoConfig.get("LEDs")).forEach(function (key) {
+                        ConfigControl.arduinoConfig.get()["LEDs"][key].forEach(key2 => {
                             if(key == "IRRGB") {
                                 TMPLED.IR.push(key2)
                             } else {
@@ -218,31 +143,40 @@ var LED2Cron = new CronJob.CronJob('0 */5 * * * *', async () => {
                     asyncForEach(TMPLED.IR, async (IR) => {
                         Arduino.Write(IR+" power off");
                     });
+                } else if(row.cmd !== (undefined || null)) {
+                    JSON.parse(row.LedStrip).forEach(LedStrip => {
+                        JSON.parse(row.cmd).forEach(cmd => {
+                            console.log(cmd);
+                            Arduino.Write(cmd.command, false, cmd.type, LedStrip, {options: {color: [cmd.color]}}, true);
+                        });
+                    });
                 } else if(row.Color != null) {
                     asyncForEach(TMPLED.IR, async (IR) => {
                         Arduino.Write(IR+" power on");
                         await Arduino.brightness(row.Brightness);
                         Arduino.Write(IR+" color "+row.Color);
                     });
-                }
-
-                if(row.RGB !== undefined) {
+                } else if(row.RGB !== (undefined || null)) {
+                    console.log("2");
                     asyncForEach(TMPLED.RGB, async (LED) => {
                         Arduino.WriteAdvanced(LED + " RGB "+row.RGB);
                     });
                 }
 
                 TMP["LED2Cron"][row.ID].RunTime = new Date() - TMP["LED2Cron"][row.ID].RunTime
-                console.log('CronJob %s completed: %dms', row.Name, TMP["LED2Cron"][row.ID].RunTime);
+                // console.log('CronJob %s completed: %dms', row.Name, TMP["LED2Cron"][row.ID].RunTime);
             }, null, true, null, null, false);
         }
         if(row.type == "cron") {
             LEDCrons["Job"][row.ID].setTime(new CronJob.CronTime(row.CronTime));
+        } else {
+            LEDCrons["Job"][row.ID].setTime(new CronJob.CronTime(moment(row.CronTime)));
+        }//Thu Jun 09 2022 03:26:00 GMT+0200 (Midden-Europese zomertijd)
             LEDCrons["Job"][row.ID].start();
             if(LEDCrons["jobs"]["new"].indexOf(row.ID) === -1) {
                 LEDCrons["jobs"]["new"].push(row.ID);
             }
-        }
+        // }
     });
 
     if(TMP["init"]) {
@@ -268,7 +202,6 @@ setTimeout(() => {
 
 module.exports = { 
     LedJob: LED,
-    EventReload,
     LED2Cron,
     Events,
     AutoUpdaterCron

@@ -11,8 +11,8 @@
     </header>
     <div class="card-content">
         <div style="margin-bottom: -0.5rem;" class="buttons has-addons">
-            <button style="font-size: xx-large;" onclick="Single<%- ID+Name %>Set('off');" class="button"><i class="fas fa-lightbulb-slash"></i></button>
-            <button style="font-size: xx-large;" onclick="Single<%- ID+Name %>Set('on')" class="button"><i class="fas fa-lightbulb-on"></i></button>
+            <button style="font-size: xx-large;" onclick="Single<%- ID+Name %>Set(0);" class="button"><i class="fas fa-lightbulb-slash"></i></button>
+            <button style="font-size: xx-large;" onclick="Single<%- ID+Name %>Set(255)" class="button"><i class="fas fa-lightbulb-on"></i></button>
         </div>
     </div>
     <footer class="card-footer">
@@ -28,8 +28,12 @@
 </div>
 <script>
     function Single<%- ID+Name %>Set(action) {
-        socket.emit("Single.<%- Name %>", JSON.stringify({
-            action: 'power '+action,
+        socket.emit("WriteArduino", JSON.stringify({
+            command: 'LEDs.Single',
+            placeholders: {
+                pin: <%- LED.pin %>,
+                color: action,
+            },
             LED: "Single",
             Name: "<%- Name %>",
             shortcut: false

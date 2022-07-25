@@ -14,11 +14,13 @@ if (!fs.existsSync("data/Settings")) {
 }
 
 
-require('./src/Database');
-const config = require('./src/ConfigManager');
 
-const AutoUpdater = require('./src/AutoUpdater');
-const HTTP = require('./src/HTTP');
+require('./src/AutoUpdater');
+require('./src/ConfigManager');
+require('./src/LEDManager');
+require('./src/ArduinoParser');
+require('./src/Database');
+require('./src/HTTP');
 
 process.on("message", function (message) {
   console.log(`Message from main.js:`, message);

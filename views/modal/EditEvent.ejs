@@ -8,12 +8,13 @@
           <button class="button is-primary">Normal</button>
           <button class="button is-link">Normal</button>
           <button class="button is-info">Normal</button>
-          <% if(req.body.extendedProps.blocked) {%>
-            <button onclick="UnblockTime(<%- req.params.ID %>, <%= JSON.stringify(req.body) %>)" class="button is-warning">Unblock this run</button>
+          <% if(req.body.extendedProps?.blocked) {%>
+            <button onclick="UnblockTime(<%- req.params.ID %>, <%- JSON.stringify(req.body) %>)" class="button is-warning">Unblock this run</button>
           <% } else { %>
-            <button onclick="BlockTime(<%- req.params.ID %>, <%= JSON.stringify(req.body) %>)" class="button is-warning">Block this run</button>
+            <% console.log(req.data); %>
+            <button onclick="BlockTime(<%- req.params.ID %>, <%- JSON.stringify(req.body) %>)" class="button is-warning">Block this 2run</button>
           <% } %>
-          <button onclick="Delete(<%- req.params.ID %>, <%= JSON.stringify(req.body) %>)" class="button is-danger">Delete CronJob</button>
+          <button onclick="Delete(<%- req.params.ID %>, <%- JSON.stringify(req.body) %>)" class="button is-danger">Delete CronJob</button>
         </div>
         <div class="column">
         </div>

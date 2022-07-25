@@ -14,7 +14,7 @@ module.exports = {
         field: "Brightness"
       }
     );
-    await queryInterface.addColumn('ledtimes', 'cmd', Sequelize.TEXT('long'));
+    await queryInterface.addColumn('ledtimes', 'cmd', Sequelize.JSON());
   },
   async down(queryInterface, Sequelize) {
   }

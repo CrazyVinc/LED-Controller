@@ -12,7 +12,9 @@
   "license": "ISC",
   "dependencies": {
     "@crazyvinc/updater": "^1.0.0",
+    "@serialport/binding-mock": "^10.2.2",
     "archiver": "^5.3.0",
+    "avrgirl-arduino": "^5.0.1",
     "axios": "^0.21.1",
     "console-stamp": "^3.0.3",
     "convict": "^6.2.1",
@@ -31,7 +33,8 @@
     "moment-strftime": "^0.5.0",
     "mysql2": "^2.3.3",
     "sequelize": "^6.14.1",
-    "serialport": "^9.2.8",
+    "sequelize-bcrypt": "^1.1.0",
+    "serialport": "^10.4.0",
     "socket.io": "^4.4.0",
     "umzug": "^3.0.0",
     "uuidv4": "^6.2.12"

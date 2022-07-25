@@ -1,3 +1,4 @@
+var fs = require('fs');
 var path = require('path');
 
 const Sequelize = require('sequelize');
@@ -11,30 +12,33 @@ var models = require("./models");
 
 const sequelize = models.sequelize;
 
-var connection = mysql.createPool({
-	host     : config.get().DB.hostname,
-	user     : config.get().DB.user,
-	password : config.get().DB.password,
-	database : config.get().DB.database,
-	waitForConnections: true,
-	queueLimit: 0
-});
+if(!config.get().DB.Sequelize || require.main == module) {
+	config.set("DB.Sequelize", true);
+	setTimeout(() => {
+		config.save();
+	}, 5000);
+} else {
+	var connection = mysql.createPool({
+		host     : config.get().DB.hostname,
+		user     : config.get().DB.user,
+		password : config.get().DB.password,
+		database : config.get().DB.database,
+		waitForConnections: true,
+		queueLimit: 0
+	});
 
-const umzug = new Umzug({
-	migrations: { glob: 'src/Database/migrations/*.js' },
-	context: sequelize.getQueryInterface(),
-	storage: new SequelizeStorage({ sequelize }),
-	logger: console,
-});
+	const umzug = new Umzug({
+		migrations: { glob: 'src/Database/migrations/*.js' },
+		context: sequelize.getQueryInterface(),
+		storage: new SequelizeStorage({ sequelize }),
+		logger: console,
+	});
 
-
-(async () => {
-	try {
+	
+	(async () => {
 		await umzug.up();
-	} catch (error) {
-		console.log(error);
-	}
-})();
+	})();
+}
 
 async function init() {
 	if(await models.accounts_model.count() == 0) {
@@ -49,7 +53,7 @@ async function init() {
 		await models.ledtimes_model.create({
 			Name: "Night time",
 			CronTime: "0 0 0 * * *",
-			enabled: false,
+			enabled: true,
 			Brightness: 0
 		});
 	}

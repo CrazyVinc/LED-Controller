@@ -1,0 +1,6 @@
+if(LEDType == "RGB") {
+    // TMP["Off"] = "LedAction('RGB', '<%- Name %>', 'RGB 0,0,0');socket.emit('init', JSON.stringify({type: 'RGB', LED: '<%- Name %>', set: '0,0,0'}));";
+} else {
+    // TMP["On"] = "LedAction('<%- LEDType %>', '<%- Name %>', 'power on');socket.emit('init', JSON.stringify({type: '<%- LEDType %>', LED: '<%- Name %>', set: 'power on'}));";
+    // TMP["Off"] = "LedAction('<%- LEDType %>', '<%- Name %>', 'power off');socket.emit('init', JSON.stringify({type: '<%- LEDType %>', LED: '<%- Name %>', set: 'power off'}));";
+}

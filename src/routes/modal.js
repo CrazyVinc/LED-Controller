@@ -1,7 +1,6 @@
 var express = require('express');
 var session = require('express-session');
 let ejs = require('ejs');
-var bodyParser = require('body-parser');
 var moment = require('moment');
 
 var CronJob = require('cron');
@@ -13,7 +12,7 @@ const Arduino = require("../ArduinoController");
 const {connection} = require("../Database");
 const {RemoteCntrlColors, capitalizeFirstLetter} = require("../utils");
 
-var config = require('../ConfigManager');
+var {config, arduinoConfig} = require('../ConfigManager');
 
 var app = express.Router();
 
@@ -32,7 +31,15 @@ app.post('/Calendar/:ID', async(req, res) => {
   
   app.post('/NewEvent', async(req, res) => {
     // console.log(req.body);
-    res.render('modal/NewEvent', {config: JSON.parse(config.config), capitalizeFirstLetter, Cron: CronJob, moment: moment, req: req, RemoteCntrlColors: RemoteCntrlColors});
+    res.render('modal/NewEvent', {
+      config: JSON.parse(config),
+      capitalizeFirstLetter,
+      Cron: CronJob,
+      moment,
+      req,
+      RemoteCntrlColors,
+      arduinoConfig: JSON.parse(arduinoConfig)
+    });
   });
   
   

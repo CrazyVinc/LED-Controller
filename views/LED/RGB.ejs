@@ -1,7 +1,7 @@
 <div class="card">
     <header class="card-header">
         <p class="card-header-title">
-            <%- Name %>
+            <%- LED.Name %>
         </p>
         <button class="card-header-icon" aria-label="more options">
             <span class="icon">
@@ -54,8 +54,12 @@
     });
     function RGB<%- ID+Name %>SetRGB(RGB) {
         RGB = RGB.rgb
-        socket.emit("RGB.<%- Name %>", JSON.stringify({
-            action: 'RGB '+RGB.r+','+RGB.g+','+RGB.b,
+        socket.emit("WriteArduino", JSON.stringify({
+            command: 'LEDs.RGB',
+            placeholders: {
+                pin: [<%- LED.pin %>],
+                color: [RGB.r,RGB.g,RGB.b]
+            },
             LED: "RGB",
             Name: "<%- Name %>",
             shortcut: false
@@ -65,7 +69,8 @@
     RGB<%- ID+Name %>.on('input:change', RGB<%- ID+Name %>SetRGB);
     
     socket.on("RGB.<%- Name %>", data => {
-         document.getElementById("CurrentRGB<%- Name %>").innerHTML = data;
+        // RGB<%- ID+Name %>.color.rgbString = `rgb(${data})`;
+        document.getElementById("CurrentRGB<%- Name %>").innerHTML = data;
     });
     socket.on("init.RGB.<%- Name %>", data => {
         init<%-ID+Name%>(data)
@@ -76,6 +81,6 @@
     function init<%-ID+Name%>(data) {
         if(data == undefined) data = document.getElementById("CurrentRGB<%- Name %>").innerHTML.substr(<%- (Name+" RGB ").length %>);
         document.getElementById("RGB<%- Name %>").innerHTML = data;
-        RGB<%- ID+Name %>.color.rgbString = 'rgb('+data+')';
+        RGB<%- ID+Name %>.color.rgbString = `rgb(${data})`;
     }
 </script>

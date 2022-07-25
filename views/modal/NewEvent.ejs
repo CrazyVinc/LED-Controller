@@ -1,307 +1,204 @@
-<!DOCTYPE html>
-<html>
-  <body>
-    <div class="container">
-      <form action="/new/event" method="post">
-        <div class="columns">
-          <div class="column">
-            <div class="field has-addons">
-              <p class="control">
-                <a class="button is-static">
-                  Naam:
-                </a>
-              </p>
-              <p class="control">
-                <input class="input" type="text" name="Naam" placeholder="Name" required>
-              </p>
-            </div>
-            <div id="LEDSwitches">
-              <div class="columns">
-              <%
-              var count = {LED: 0, type:0, total: 0};
-              Object.keys(config["LEDs"]).forEach(function(type) {
+<div class="container">
+  <form action="/new/event" method="post">
+    <div class="columns">
+      <div class="column">
+        <div class="field has-addons">
+          <p class="control">
+            <a class="button is-static">
+              Job Name:
+            </a>
+          </p>
+          <p class="control">
+            <input class="input" type="text" name="JobName" placeholder="Name" required>
+          </p>
+        </div>
+        <div id="LEDSwitches">
+          <div class="columns">
+            <%
+                var count = {LED: 0, type:0, total: 0};
+              Object.keys(arduinoConfig["LEDs"]).forEach(function(type) {
                 count.type++;
-                config["LEDs"][type].forEach(LED => {
+                arduinoConfig["LEDs"][type].forEach(LED => {
+                  LED = (LED?.Name || LED);
+                  console.log(LED)
                   count.LED++;
                   count.total++;
                   if(count.total > 3) { count.total = 0; %>
-                  </div><div class="columns">
-                  <% } %>
-                <div class="column is-one-third">
-                  <div class="field">
-                    <input id="<%- type+LED+count.LED %>Switch" data-type="<%- type %>" data-id="<%- type+LED+count.LED %>" data-name="<%- LED %>" onchange="StateChange()" type="checkbox" name="<%- type+LED %>" class="switch">
-                    <label for="<%- type+LED+count.LED %>Switch"><%- LED %></label>
-                  </div>
-                </div>
-                <% });
-              }); %>
+          </div>
+          <div class="columns">
+            <% } %>
+            <div class="column is-one-third">
+              <div class="field">
+                <input id="<%- type+LED+count.LED %>Switch" data-type="<%- type %>" data-id="<%- type+LED+count.LED %>"
+                  data-name="<%- LED %>" onchange="StateChange()" type="checkbox" name="LEDs" value="<%- type+LED %>"
+                  class="switch">
+                <label for="<%- type+LED+count.LED %>Switch"><%- LED %></label>
               </div>
             </div>
+            <% });
+              }); %>
+          </div>
+        </div>
 
-            <% 
+        <% 
               var count = {LED: 0, type:0, total: 0};
-              Object.keys(config["LEDs"]).forEach(function(type) {
+              Object.keys(arduinoConfig["LEDs"]).forEach(function(type) {
                 count.type++;
-                config["LEDs"][type].forEach(LED => {
+                arduinoConfig["LEDs"][type].forEach(LED => {
+                  LED = (LED?.Name || LED);
                 count.LED++;
                 count.total++;
                   %><%- include((type), {"Name": LED, "ID": type+LED+count.LED }); %><%
                 });
               }); %>
-            
-          </div>
-          <div class="column is-three-fifths">
+
+      </div>
+      <div class="column is-three-fifths">
+        <div class="field">
+          <label for="RunType">Calendar</label>
+          <input id="RunType" onchange="StateChange()" type="checkbox" class="switch">
+          <label for="RunType">Cron</label>
+        </div>
+        <div id="Calendar" class="card">
+          <header class="card-header">
+            <p class="card-header-title is-centered">
+              Calendar
+            </p>
+          </header>
+          <div class="card-content">
             <div class="field">
-              <label for="RunType">Calendar</label>
-              <input id="RunType" onchange="StateChange()" type="checkbox" class="switch">
-              <label for="RunType">Cron</label>
+              <input type="text" id="TimeSel" hidden />
             </div>
-            <div id="Calendar" class="card">
-              <header class="card-header">
-                <p class="card-header-title is-centered">
-                  Calendar
+          </div>
+        </div>
+        <div id="Cron" style="display: none;" class="card">
+          <header class="card-header">
+            <p class="card-header-title is-centered">
+              Cron
+            </p>
+          </header>
+          <div class="card-content">
+            <div class="box">
+              <div class="field has-addons has-addons" style="margin: 0;">
+                <p class="control" style="width: 100%;">
+                  <button class="button is-expended is-fullwidth is-static">
+                    <span>Seconden</span>
+                  </button>
                 </p>
-              </header>
-              <div class="card-content">
-                <div class="field">
-                  <input type="text" id="TimeSel" hidden/>
+                <p class="control" style="width: 100%;">
+                  <button class="button is-expended is-fullwidth is-static">
+                    <span>Minuten</span>
+                  </button>
+                </p>
+                <p class="control" style="width: 100%;">
+                  <button class="button is-expended is-fullwidth is-static">
+                    <span>Uren</span>
+                  </button>
+                </p>
+              </div>
+              <div class="field has-addons has-addons">
+                <div class="control" style="width: 100%;">
+                  <div class="select is-multiple" style="width: 100%;">
+                    <select multiple name="Sec" style="width: 100%;">
+                      <option value="*" onclick="selectAll(this)">All</option>
+                      <% for (let DayINT = 0; DayINT < 60; DayINT++) { %>
+                      <option value="<%- DayINT %>"><%- DayINT %></option>
+                      <% } %>
+                    </select>
+                  </div>
+                </div>
+                <div class="control" style="width: 100%;">
+                  <div class="select is-multiple" style="width: 100%;">
+                    <select multiple name="Min" style="width: 100%;">
+                      <option value="*" onclick="selectAll(this)">All</option>
+                      <% for (let DayINT = 0; DayINT < 60; DayINT++) { %>
+                      <option value="<%- DayINT %>"><%- DayINT %></option>
+                      <% } %>
+                    </select>
+                  </div>
+                </div>
+                <div class="control" style="width: 100%;">
+                  <div class="select is-multiple" style="width: 100%;">
+                    <select multiple name="Hours" style="width: 100%;">
+                      <option value="*" onclick="selectAll(this)">All</option>
+                      <% for (let DayINT = 0; DayINT < 24; DayINT++) { %>
+                      <option value="<%- DayINT %>"><%- DayINT %></option>
+                      <% } %>
+                    </select>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div id="Cron" style="display: none;" class="card">
-              <header class="card-header">
-                <p class="card-header-title is-centered">
-                  Cron
-                </p>
-              </header>
-              <div class="card-content">
-                <div class="box">
-                  <div class="field has-addons has-addons" style="margin: 0;">
-                    <p class="control" style="width: 100%;">
-                      <button class="button is-expended is-fullwidth is-static">
-                        <span>Seconden</span>
-                      </button>
-                    </p>
-                    <p class="control" style="width: 100%;">
-                      <button class="button is-expended is-fullwidth is-static">
-                        <span>Minuten</span>
-                      </button>
-                    </p>
-                    <p class="control" style="width: 100%;">
-                      <button class="button is-expended is-fullwidth is-static">
-                        <span>Uren</span>
-                      </button>
-                    </p>
-                  </div>
-                  <div class="field has-addons has-addons">
-                    <div class="control" style="width: 100%;">
-                      <div class="select is-multiple" style="width: 100%;">
-                        <select multiple name="Sec" style="width: 100%;">
-                          <option value="*" onclick="selectAll(this)">All</option>
-                          <% for (let DayINT = 0; DayINT < 60; DayINT++) { %>
-                            <option value="<%- DayINT %>"><%- DayINT %></option>
-                          <% } %>
-                        </select>
-                      </div>
-                    </div>
-                    <div class="control" style="width: 100%;">
-                      <div class="select is-multiple" style="width: 100%;">
-                        <select multiple name="Min" style="width: 100%;">
-                          <option value="*" onclick="selectAll(this)">All</option>
-                          <% for (let DayINT = 0; DayINT < 60; DayINT++) { %>
-                            <option value="<%- DayINT %>"><%- DayINT %></option>
-                          <% } %>
-                        </select>
-                      </div>
-                    </div>
-                    <div class="control" style="width: 100%;">
-                      <div class="select is-multiple" style="width: 100%;">
-                        <select multiple name="Hours" style="width: 100%;">
-                          <option value="*" onclick="selectAll(this)">All</option>
-                          <% for (let DayINT = 0; DayINT < 24; DayINT++) { %>
-                            <option value="<%- DayINT %>"><%- DayINT %></option>
-                          <% } %>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
 
-                  <div class="field has-addons has-addons" style="margin: 0;">
-                    <p class="control" style="width: 100%;">
-                      <button class="button is-expended is-fullwidth is-static">
-                        <span>Dag</span>
-                      </button>
-                    </p>
-                    <p class="control" style="width: 100%;">
-                      <button class="button is-expended is-fullwidth is-static">
-                        <span>Maand</span>
-                      </button>
-                    </p>
-                    <p class="control" style="width: 100%;">
-                      <button class="button is-expended is-fullwidth is-static">
-                        <span>WerkDag</span>
-                      </button>
-                    </p>
+              <div class="field has-addons has-addons" style="margin: 0;">
+                <p class="control" style="width: 100%;">
+                  <button class="button is-expended is-fullwidth is-static">
+                    <span>Dag</span>
+                  </button>
+                </p>
+                <p class="control" style="width: 100%;">
+                  <button class="button is-expended is-fullwidth is-static">
+                    <span>Maand</span>
+                  </button>
+                </p>
+                <p class="control" style="width: 100%;">
+                  <button class="button is-expended is-fullwidth is-static">
+                    <span>WerkDag</span>
+                  </button>
+                </p>
+              </div>
+              <div class="field has-addons has-addons">
+                <div class="control" style="width: 100%;">
+                  <div class="select is-multiple" style="width: 100%;">
+                    <select multiple name="DayOfMonth" style="width: 100%;">
+                      <option value="*" onclick="selectAll(this)">All</option>
+                      <% for (let DayINT = 1; DayINT < 32; DayINT++) { %>
+                      <option value="<%- DayINT %>"><%- DayINT %></option>
+                      <% } %>
+                    </select>
                   </div>
-                  <div class="field has-addons has-addons">
-                    <div class="control" style="width: 100%;">
-                      <div class="select is-multiple" style="width: 100%;">
-                        <select multiple name="DayOfMonth" style="width: 100%;">
-                          <option value="*" onclick="selectAll(this)">All</option>
-                          <% for (let DayINT = 1; DayINT < 32; DayINT++) { %>
-                            <option value="<%- DayINT %>"><%- DayINT %></option>
-                          <% } %>
-                        </select>
-                      </div>
-                    </div>
-                    <div class="control" style="width: 100%;">
-                      <div class="select is-multiple" style="width: 100%;">
-                        <select multiple name="Months" style="width: 100%;">
-                          <option value="*" onclick="selectAll(this)">All</option>
-                          <% for (let DayINT = 0; DayINT < 12; DayINT++) { %>
-                            <option value="<%- DayINT %>"><%- capitalizeFirstLetter(moment().locale("NL").month(DayINT).format("MMMM")); %></option>
-                          <% } %>
-                        </select>
-                      </div>
-                    </div>
-                    <div class="control" style="width: 100%;">
-                      <div class="select is-multiple" style="width: 100%;">
-                        <select multiple name="DayOfWeek" style="width: 100%;">
-                          <option value="*" onclick="selectAll(this)">All</option>
-                          <option value="1">Maandag</option>
-                          <option value="2">Dinsdag</option>
-                          <option value="3">Woensdag</option>
-                          <option value="4">Donderdag</option>
-                          <option value="5">Vrijdag</option>
-                          <option value="6">Zaterdag</option>
-                          <option value="0">Zondag</option>
-                        </select>
-                      </div>
-                    </div>
-                    <!-- <p class="control">
+                </div>
+                <div class="control" style="width: 100%;">
+                  <div class="select is-multiple" style="width: 100%;">
+                    <select multiple name="Months" style="width: 100%;">
+                      <option value="*" onclick="selectAll(this)">All</option>
+                      <% for (let DayINT = 0; DayINT < 12; DayINT++) { %>
+                      <option value="<%- DayINT %>">
+                        <%- capitalizeFirstLetter(moment().locale("NL").month(DayINT).format("MMMM")); %></option>
+                      <% } %>
+                    </select>
+                  </div>
+                </div>
+                <div class="control" style="width: 100%;">
+                  <div class="select is-multiple" style="width: 100%;">
+                    <select multiple name="DayOfWeek" style="width: 100%;">
+                      <option value="*" onclick="selectAll(this)">All</option>
+                      <option value="1">Maandag</option>
+                      <option value="2">Dinsdag</option>
+                      <option value="3">Woensdag</option>
+                      <option value="4">Donderdag</option>
+                      <option value="5">Vrijdag</option>
+                      <option value="6">Zaterdag</option>
+                      <option value="0">Zondag</option>
+                    </select>
+                  </div>
+                </div>
+                <!-- <p class="control">
                       <input class="input" type="number" min=0 max=6 placeholder="Brightness">
                     </p> -->
-                  </div>
-                </div>
               </div>
             </div>
           </div>
         </div>
-
-        <div class="field is-grouped">
-          <div class="control">
-            <button class="button is-link">Submit</button>
-          </div>
-          <div class="control">
-            <button type="button" class="button is-link is-light">Cancel</button>
-          </div>
-        </div>
-      </form>
+      </div>
     </div>
-    <script>
-      function ReturnError(error, ErrorObject) {
-        bulmaToast.toast({
-          message: error,
-          type: 'is-danger',
-          position: 'top-center'
-        });
-        return ErrorObject || error;
-      }
 
-      var form2 = document.querySelector("form");
-      form2.addEventListener('submit', (event) => {
-        event.preventDefault();
-        const data = new URLSearchParams();
-        var formdata = new FormData(form2);
-        const Switches = document.querySelectorAll("#LEDSwitches input[type=checkbox]");
-
-        Switched = [];
-        Switches.forEach( elm => {
-          if(elm.checked) {
-            Switched.push(elm.dataset.name);
-            if(elm.dataset.type == "Single") {
-              var SingleSwitch = document.getElementById(elm.dataset.id+"Value");
-              if(!SingleSwitch.checked) {
-                data.append(elm.dataset.name+"Value", "off");
-              }
-            }
-          }
-        });
-        if(Switched.length == 0) return ReturnError("No LED enabled!");
-
-        data.append("Enable", Switched);
-        if(document.getElementById("RunType").checked) {
-          formdata.append("RunType", "Cron");
-          if( !(formdata.has("Sec") &&
-                formdata.has("Min") &&
-                formdata.has("Hours") &&
-                formdata.has("DayOfWeek") &&
-                formdata.has("Months") &&
-                formdata.has("DayOfMonth")) ) {
-            return ReturnError("Cron niet volledig!");
-          }
-        } else {
-          formdata.append("RunType", "Calendar");
-          if(cal.selectedDates == '') {
-            bulmaToast.toast({
-              message: "Geen datum gekozen!",
-              type: 'is-danger',
-              position: 'top-center'
-            });
-            return "Geen datum gekozen!";
-          }
-          formdata.append("Calendar", cal.selectedDates);
-        }
-
-        for (const pair of formdata) {
-            data.append(pair[0], pair[1]);
-        }
-
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', '/new/event');
-        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
-        xhr.send(data);
-
-        xhr.onload = () => {
-            console.log(xhr.responseText);
-        }
-      });
-      function selectAll(elmt) {
-        SelectElm = elmt.parentElement;
-        for ( i=0; i<SelectElm.length; i++) {
-          SelectElm[i].selected = true;
-        }
-      }
-      
-      function StateChange() {
-        const Switches = document.querySelectorAll("#LEDSwitches input[type=checkbox]");
-
-        Switches.forEach( elm => {
-          if(elm.checked) {
-            document.getElementById(elm.id.slice(0, -6)).style.display = "";
-          } else {
-            document.getElementById(elm.id.slice(0, -6)).style.display = "none";
-          }
-        });
-
-        if(document.getElementById("RunType").checked) {
-          document.getElementById("Cron").style.display = "";
-          document.getElementById("Calendar").style.display = "none";
-        } else {
-          document.getElementById("Calendar").style.display = "";
-          document.getElementById("Cron").style.display = "none";
-        }
-      }
-      
-      var cal = flatpickr("#TimeSel", {
-        enableTime: true,
-        enableSeconds: true,
-        inline: true
-      });
-
-      function SetRGB(action) {
-          document.getElementById(action.ID).value = "RGB "+action.rgb.r+","+action.rgb.g+","+action.rgb.b;
-      }
-    </script>
-  </body>
-</html>
+    <div class="field is-grouped">
+      <div class="control">
+        <button class="button is-link">Submit</button>
+      </div>
+      <div class="control">
+        <button type="button" class="button is-link is-light">Cancel</button>
+      </div>
+    </div>
+  </form>
+</div>

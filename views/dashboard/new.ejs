@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <%- include("../../includes/head.ejs") %>
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.0.2/dist/css/tom-select.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.0.2/dist/js/tom-select.complete.min.js"></script>
+</head>
+<body>
+    <%- include("../../includes/nav.ejs") %>
+    <div class="container">
+        <div class="columns">
+            <div class="column" id="Elmts">
+                <p class="control is-expanded">
+                    <a href="/Users" class="button is-fullwidth is-success">
+                        Overzicht
+                    </a>
+                </p>
+                <div class="card">
+                    <header class="card-header">
+                        <p class="card-header-title">
+                            Invite iemand
+                        </p>
+                        <button class="card-header-icon" aria-label="more options">
+                            <span class="icon">
+                                <i class="fas fa-angle-down" aria-hidden="true"></i>
+                            </span>
+                        </button>
+                    </header>
+                    <div class="card-content">
+                        <div class="content" id="sendInvite">
+                            <div class="field is-horizontal">
+                                <div class="field-body">
+                                    <div class="field">
+                                        <p class="control is-expanded">
+                                            <input id="sendInvite-email" class="input" type="email" name="email"
+                                                placeholder="email" value="email">
+                                        </p>
+                                    </div>
+                                    <div class="field">
+                                        <p class="control is-expanded">
+                                            <input id="sendInvite-username" class="input" type="text" name="username"
+                                                placeholder="username" value="username">
+                                        </p>
+                                    </div>
+                                    <div class="field">
+                                        <p class="control is-expanded">
+                                            <select id="sendInvite-meta" name="meta"></select>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="field is-horizontal">
+                                <div class="field-body">
+                                    <div class="field">
+                                        <p class="control is-expanded">
+                                            <button onclick="submit('sendInvite', true);"
+                                                class="button is-fullwidth is-success">
+                                                Submit
+                                            </button>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div><br>
+                <% users.forEach(user => {
+                    user.password = "null"; %>
+                <div id="<%- user.id %>" class="box">
+                    <div class="field is-horizontal">
+                        <div class="field-body">
+                            <div class="field">
+                                <p class="control is-expanded">
+                                    <input id="<%- user.id %>-email" class="input" type="text" name="email"
+                                        placeholder="email" value="<%- user.email %>">
+                                </p>
+                            </div>
+                            <div class="field">
+                                <p class="control is-expanded">
+                                    <input id="<%- user.id %>-username" class="input" type="text" name="username"
+                                        placeholder="username" value="<%- user.username %>">
+                                </p>
+                            </div>
+                            <div class="field">
+                                <p class="control is-expanded">
+                                    <input id="<%- user.id %>-password" class="input" type="password" name="password"
+                                        placeholder="password" value="<%- user.password %>">
+                                </p>
+                            </div>
+                            <div class="field">
+                                <p class="control is-expanded">
+                                    <textarea id="<%- user.id %>-meta" class="input" type="text" name="meta"
+                                        placeholder="meta"><%- user.meta %></textarea>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field is-horizontal">
+                        <div class="field-body">
+                            <div class="field">
+                                <p class="control is-expanded">
+                                    <button onclick="submit('<%- user.id %>');" class="button is-fullwidth is-success">
+                                        Submit
+                                    </button>
+                                </p>
+                            </div>
+                            <div class="field">
+                                <p class="control is-expanded">
+                                    <button onclick="remove('<%- user.id %>');" class="button is-fullwidth is-danger">
+                                        Delete
+                                    </button>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <% }); %>
+            </div>
+        </div>
+        <p class="control is-expanded">
+            <button onclick="addUser();" class="button is-fullwidth is-success">
+                Add account
+            </button>
+        </p>
+    </div>
+</body>
+<script>
+    function submit(ID, newUser = false) {
+        if (newUser) {
+            console.log(ID)
+            socket.emit('invite.Submit', {
+                email: (document.getElementById(`${ID}-email`).value),
+                username: (document.getElementById(`${ID}-username`).value),
+                meta: (document.getElementById(`${ID}-meta`).value),
+            });
+        } else {
+            socket.emit('invite.Submit', {
+                ID: ID,
+                email: (document.getElementById(`${ID}-email`).value),
+                username: (document.getElementById(`${ID}-username`).value),
+                meta: (document.getElementById(`${ID}-meta`).value),
+            });
+        }
+    }
+    function addUser() {
+        socket.emit('invite.Submit', "new");
+    }
+    function remove(ID = -1) {
+        socket.emit('invite.Submit', {
+            remove: true,
+            ID: ID
+        });
+        document.getElementById(`${ID}`).remove();
+    }
+        var control = new TomSelect("#sendInvite-meta", {
+            create: true,
+            sortField: {
+                field: "text",
+                direction: "asc"
+            },
+            valueField: 'title',
+            labelField: 'title',
+            options: [
+                {id: 1, title: '{}'},
+                {id: 2, title: `{"Only": ["/forms"], "home": "/forms"}`}
+            ],
+        });
+	    control.setValue("{}"); 
+</script>
+</html>

@@ -1,111 +1,136 @@
-<% 
+<%
 var LEDControllers = 0;
-%> <!DOCTYPE html>
+var TMP = {};
+%><!DOCTYPE html>
 <html>
-	<head>
-        <%- include("./includes/head.ejs", {Page: "Home"}) %>
-        <link rel="stylesheet" href="assets/css/bulma-slider.min.css">
-        <script src="/assets/FontAwesome.Pro.6.0.0.Beta1/web/js/solid.min.js"></script>
-        <script src="/assets/FontAwesome.Pro.6.0.0.Beta1/web/js/fontawesome.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
-        <script src="/socket.io/socket.io.js"></script>
-        <script>
-            const socket = io();
-            socket.on("connect", () => {
-                console.log(socket.id);
-            });
+<head>
+    <%- include("./includes/head.ejs", {Page: "Home"}) %>
+    <link rel="stylesheet" href="assets/css/bulma-slider.min.css">
+    <script src="/assets/FontAwesome.Pro.6.0.0.Beta1/web/js/solid.min.js"></script>
+    <script src="/assets/FontAwesome.Pro.6.0.0.Beta1/web/js/fontawesome.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        socket.on("connect", () => {
+            console.log(socket.id);
+        });
+    </script>
+</head>
+<body>
+    <%- include("includes/nav") %>
+    <div class="container is-fluid">
+        <div class="columns">
+            <div class="column">
+                <div style="padding-right: initial;" class="button">
+                    <span class="icon is-small">
+                        <i class="fa-solid fa-power-off"></i>
+                    </span>
+                    <div class="buttons has-addons">
+                        <% 
+                        TMP["On"] = [];
+                        TMP["Off"] = [];
+                        Object.keys(LEDs).forEach((LEDType) => {
+                            LEDs[LEDType].forEach((Name) => {
+                                var T = Name;
+                                Name = (Name?.Name || Name);
+                                    if(Array.isArray(T.pin)) {
+                                        T.pin = T.pin.join(',');
+                                    } else {
+                                        console.log(452, T.pin);
+                                    }
+                                    TMP["On"].push(`writeArduino('LEDs.${LEDType}', {
+                                        pin: [${T.pin}],
+                                        color: [255,255,255]
+                                    }, '${LEDType}', '${Name}')`);
+                                    TMP["Off"].push(`writeArduino('LEDs.${LEDType}', {\
+                                        pin: [${T.pin}],\
+                                        color: [0,0,0]\
+                                    }, '${LEDType}', '${Name}')`);
+                                    TMP["On"].push(`socket.emit('init');`);
+                                    // TMP["Off"].push(`writeArduino('${LEDType}', '${Name}', 'power off')`);
+                                    // TMP["Off"].push(`socket.emit('init', JSON.stringify({type: '${LEDType}', LED: '${Name}', set: 'power off'}));`);
 
-            socket.on("hello", data => {
-                console.log("Message: " + data);
-            });
-        </script>
-	</head>
-	<body>
-        <%- include("includes/nav") %>
-        <div class="container is-fluid">
-            <div class="columns">
-                <div class="column">
-                    <div style="padding-right: initial;" class="button">
-                        <span class="icon is-small">
-                            <i class="fa-solid fa-power-off"></i>
-                        </span>
-                        <div class="buttons has-addons">
-                            <button onclick="<%
-                            Object.keys(LEDs).forEach((LEDType) => {
-                                LEDs[LEDType].forEach((Name) => {
-                                    if(LEDType == "RGB") {
-                                        %>LedAction('RGB', '<%- Name %>', 'RGB 255,255,255');socket.emit('init', JSON.stringify({type: 'RGB', LED: '<%- Name %>', set: '255,255,255'}));<% 
-                                    } else {
-                                        %>LedAction('<%- LEDType %>', '<%- Name %>', 'power on');socket.emit('init', JSON.stringify({type: '<%- LEDType %>', LED: '<%- Name %>', set: 'power on'}));<%
-                                    }
-                                });
-                            });%>" class="button is-success">On</button>
-                            <button onclick="socket.emit('Queue', 'reset');<%
-                            Object.keys(LEDs).forEach((LEDType) => {
-                                LEDs[LEDType].forEach((Name) => {
-                                    if(LEDType == "RGB") {
-                                        %>LedAction('RGB', '<%- Name %>', 'RGB 0,0,0');socket.emit('init', JSON.stringify({type: 'RGB', LED: '<%- Name %>', set: '0,0,0'}));<%
-                                    } else {
-                                        %>LedAction('<%- LEDType %>', '<%- Name %>', 'power off');socket.emit('init', JSON.stringify({type: '<%- LEDType %>', LED: '<%- Name %>', set: 'power off'}));<%
-                                    }
-                                });
-                            });%>" class="button is-danger">Off</button>
-                        </div>
+                            });
+                        }); %>
+                        <button onclick="<%- TMP['On'].join(';') %>" class="button is-success">On</button>
+                        <button onclick="socket.emit('Queue', 'reset');<%- TMP['Off'].join(';') %>" class="button is-danger">Off</button>
                     </div>
                 </div>
             </div>
-            <div class="columns">
+        </div>
+        <div class="columns is-multiline">
             <%
               var count = {LED: 0, type:0, total: 0};
               Object.keys(LEDs).forEach(function(type) {
+                var path = "LED/"+type;
                 count.type++;
                 LEDs[type].forEach(LED => {
+                    if(type == "thirdparty") return;
+                    if(LEDs["thirdparty"][type] !== undefined) path = "../node_modules/LEDControllerPlugin/views/"+LEDs["thirdparty"][type].path;
                     if(count.LED == 2) {
                         count.LED = 0;
-                        %></div><div class="columns"><%
-                    }
-                    %><div class="column"><%- include(("LED/"+type), {"Name": LED, "ID": type+LED+count.LED }); %></div><%
-                count.LED++;
-                count.total++;
+                        %>
+                        </div>
+        <div class="columns"><%
+                    } %><div class="column"><%-
+                        include(path, {
+                        "Name": (LED?.Name || LED),
+                        LED,
+                        "ID": type+(LED?.Name || LED)+count.LED
+                    }); %>
+            </div><%
+                    count.LED++;
+                    count.total++;
                 });
               }); %>
-            </div>
         </div>
-        <footer class="footer" style="position: sticky;bottom:0px;">
-            <div class="content has-text-centered">
-                <p>
-                    <strong>RGB: </strong><span id="RGBColor">???, ???, ???</span>
-                    <strong>Queue: </strong><span id="QueueCount">0</span>
-                </p>
-            </div>
-        </footer>
-            <script>
-            function SetRGB(LED, RGB) {
-                socket.emit("action", JSON.stringify({
-                    action: LED+' RGB '+RGB.r+','+RGB.g+','+RGB.b,
-                    LED: "RGB",
-                    shortcut: false
-                }));
-            }
+    </div>
+    <footer class="footer" style="position: sticky;bottom:0px;">
+        <div class="content has-text-centered">
+            <p>
+                <strong>RGB: </strong><span id="RGBColor">???, ???, ???</span>
+                <strong>Queue: </strong><span id="QueueCount">0</span>
+            </p>
+        </div>
+    </footer>
+    <script>
+        function SetRGB(LED, RGB) {
+            socket.emit("action", JSON.stringify({
+                action: LED + ' RGB ' + RGB.r + ',' + RGB.g + ',' + RGB.b,
+                LED: "RGB",
+                shortcut: false
+            }));
+        }
 
-            function LedAction(LEDType, LED, action, shortcut = false, button = false) {
-                socket.emit(LEDType+"."+LED, JSON.stringify({
-                    action: action,
-                    LED: LEDType,
-                    Name: LED,
-                    shortcut: shortcut
-                }));
-            }
-            socket.on("response", data => {
-                document.getElementById("RGBColor").innerHTML = data
-            });
-            socket.on("QueueCount", data => {
-                document.getElementById("QueueCount").innerHTML = data
-            });
-            </script>
+        function LedAction(LEDType, LED, action, shortcut = false, button = false) {
+            socket.emit(LEDType + "." + LED, JSON.stringify({
+                action: action,
+                LED: LEDType,
+                Name: LED,
+                shortcut: shortcut
+            }));
+        }
+
+        function writeArduino(command, placeholders, LEDType, Name = "Not defined", shortcut = false) {
+            socket.emit("WriteArduino", JSON.stringify({
+                command: command,
+                placeholders: placeholders,
+                LED: LEDType,
+                Name: Name,
+                shortcut: shortcut
+            }));
+        }
+        socket.on("response", data => {
+            document.getElementById("RGBColor").innerHTML = data
+        });
+        socket.on("QueueCount", data => {
+            document.getElementById("QueueCount").innerHTML = data
+        });
+    </script>
     <script src="assets/js/bulma-slider.min.js"></script>
     <script>
         bulmaSlider.attach();
     </script>
-	</body>
+</body>
 </html>

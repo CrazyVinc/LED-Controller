@@ -23,7 +23,7 @@ module.exports = sequelize => {
       field: "Name"
     },
     CronTime: {
-      type: DataTypes.STRING(50),
+      type: DataTypes.STRING(255),
       allowNull: false,
       defaultValue: null,
       primaryKey: false,
@@ -86,16 +86,16 @@ module.exports = sequelize => {
       field: "type"
     },
     LedStrip: {
-      type: DataTypes.STRING(50),
+      type: DataTypes.JSON(),
       allowNull: false,
-      defaultValue: "*",
+      defaultValue: [],
       primaryKey: false,
       autoIncrement: false,
       comment: null,
       field: "LedStrip"
     },
     cmd: {
-      type: DataTypes.TEXT('long'),
+      type: DataTypes.JSON(),
       allowNull: true,
       field: "cmd"
     }

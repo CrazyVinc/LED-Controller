@@ -1,7 +1,6 @@
 var express = require("express");
 var session = require("express-session");
 let ejs = require("ejs");
-var bodyParser = require("body-parser");
 var moment = require("moment");
 
 var CronJob = require("cron");
@@ -187,15 +186,47 @@ app.get("/GetFeed", async (req, res) => {
                     if (blockedState.State) obj["backgroundColor"] = "red";
                     Response.push(obj);
                 });
+        } else {
+            var blockedState = { State: false, ID: -1 };
+
+            BlockedRuns.forEach((Blocked) => {
+                if (
+                    Blocked.Time ==
+                    moment(LED.CronTime).unix().toString().slice(0, -1)
+                ) {
+                    blockedState.State = true;
+                    blockedState.ID = Blocked.id;
+                }
+            });
+            var obj = {
+                title: LED.Name,
+                start: LED.CronTime,
+                url: "/modal/Calendar/" + LED.ID,
+                extendedProps: {
+                    ID: LED.ID,
+                    Time: moment(LED.CronTime).unix(),
+                    enable: LED.enabled,
+                    Count: i,
+                    blocked: blockedState.State,
+                    BlockedID: blockedState.ID,
+                },
+            };
+            if (blockedState.State) obj["backgroundColor"] = "red";
+            Response.push(obj);
         }
     });
     res.send(Response);
 });
 
 
-app.get("/settings", async (req, res) => {
-    res.send(config.config.toString());
+app.get("/settings/:config", async (req, res) => {
+    if(req.params.config == "config") {
+        res.send(config.config.toString());
+    } else {
+        res.send(config.config.toString());
+    }
 });
+
 app.get("/settings/schema", async (req, res) => {
     res.send(config.config.getSchemaString());
 });

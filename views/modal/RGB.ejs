@@ -11,13 +11,12 @@
 	</header>
 	<div class="card-content">
 		<div class="content">
-            <input value="RGB" name="<%- Name %>Type" hidden></input>
 			<div class="box">
 				<div id="<%- ID %>Color"></div>
 				<br>
 				<div class="field has-addons">
 					<p class="control">
-						<input class="input" id="<%- ID %>Value" name="<%- Name %>Value" type="text" value="RGB 0,0,0" readonly>
+						<input class="input" id="<%- ID %>Value" type="text" value="255, 255, 255" readonly>
 					</p>
 				</div>
 			</div>
@@ -25,6 +24,8 @@
 	</div>
 </div>
 <script>
+			// pin: [< LED.pin %>],
+			// color: [RGB.r,RGB.g,RGB.b]
 	var <%- ID %> = new iro.ColorPicker('#<%- ID %>Color', {
 		layout: [{
 			component: iro.ui.Wheel,
@@ -50,8 +51,8 @@
 			}
 		}]
 	});
-      <%- ID %>.on('color:change', <% - ID %> SetRGB);
-	function <% - ID %> SetRGB(RGB) {
+	<%- ID %>.on('color:change', <%- ID %>SetRGB);
+	function <%- ID %>SetRGB(RGB) {
 		RGB.ID = "<%- ID %>Value";
 		SetRGB(RGB);
 	}

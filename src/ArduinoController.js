@@ -1,27 +1,54 @@
-require("console-stamp")(console, "[HH:MM:ss.l]");
 var fs = require("fs");
+const EventEmitter = require("events");
 
-const { ws } = require("./SocketIO");
+const { SerialPort } = require("serialport");
 
-const SerialPort = require("serialport");
+const { MockBinding } = require('@serialport/binding-mock')
 const Readline = require("@serialport/parser-readline");
 const Ready = require("@serialport/parser-ready");
 
+var Avrgirl = require('avrgirl-arduino');
+
+// const { createExtension } = require('@forrestjs/core');
+
 const Queue = require("./Queue");
-const { config } = require("./ConfigManager.js");
+const { ws } = require("./SocketIO");
+const { config, arduinoConfig } = require("./ConfigManager.js");
+const { ArduinoJSON } = require("./ArduinoParser.js");
 const { asyncForEach, promiseWhen } = require("./utils");
 
-const ArduinoPort = new SerialPort(config.get().SerialPort, {
+console.log(arduinoConfig.get().SerialPort);
+
+let binding = {};
+if(arduinoConfig.get().ExternClients) {
+  MockBinding.createPort(arduinoConfig.get().SerialPort, { echo: true, record: true })
+  binding = {binding: MockBinding};
+}
+
+const ArduinoPort = new SerialPort({
+  ...binding,
+  path: arduinoConfig.get().SerialPort,
   baudRate: 9600,
   parity: "none",
   autoOpen: true,
 });
-
 ArduinoPort.setDefaultEncoding("utf-8");
 
+
+var LastArduinoRes;
 ArduinoPort.on('readable', function () {
   Queue.QueueToggle.set(false);
-  // console.log('Data:', Buffer.from(ArduinoPort.read()).toString())
+  LastArduinoRes = Buffer.from(ArduinoPort.read()).toString();
+  LastArduinoRes = LastArduinoRes.substring(0, LastArduinoRes.length-2);
+  
+  // createExtension.parallel('arduino/receiveData', LastArduinoRes);
+  const IsVersionRegex = /Version:((([0-9])+(\.){0,1})+)/;
+  var IsVersionData = LastArduinoRes.match(IsVersionRegex);
+  if(IsVersionData) {
+    if(IsVersionData[1] == ArduinoJSON.Firmware.Version) {
+      
+    }
+  }
 })
 
 ArduinoPort.on("open", () => {
@@ -32,12 +59,15 @@ ArduinoPort.on("open", () => {
     } catch (e) {
       LastDataJSON = {}
     }
-    Object.keys(LastDataJSON).forEach(function (key) {
-      var LED = LastDataJSON[key];
-      console.log(0, LED);
-      ArduinoWrite(key + " " + LED, true);
+    
+    Object.keys(LastDataJSON).forEach(function (Name) {
+      if(LastDataJSON[Name]["Command"] === undefined) return;
+      var Command = LastDataJSON[Name]["Command"];
+      ArduinoWrite(Command, true);
     });
-  }, 2500);
+    // createExtension.parallel('arduino/open', {ArduinoWrite});
+    if(config.get().Arduino.PrebuildFirmware) ArduinoWrite("version", true);
+  }, 5000);
   console.log("yay the port is open!");
 });
 
@@ -66,36 +96,41 @@ if (!fs.existsSync("LastData.json")) {
   }
 }
 
-function LastData(data) {
-  LED = data.split(" ", 1)[0];
-  data = data.substr(LED.length + 1);
-  if (data == "power on") {
-    LastDataJSON[LED] = "power on";
-  } else if (data == "power off") {
-    LastDataJSON[LED] = "power off";
-  } else if (data.startsWith("RGB")) {
-    LastDataJSON[LED] = data;
-  } else {
-    return;
-  }
+
+function UpdateArduino() {
+  var avrgirl = new Avrgirl({
+    board: 'uno',
+    port: config.get().SerialPort
+  });
+
+  avrgirl.flash('Blink.cpp.hex', function (error) {
+    if (error) {
+      console.error(error);
+    } else {
+      console.info('done.');
+    }
+  });
+}
+
+function LastData(data, Name, options = {}) {
+  if(LastDataJSON[Name] === undefined) LastDataJSON[Name] = {};
+  LastDataJSON[Name]["Command"] = data;
+  LastDataJSON[Name]["options"] = options;
   fs.writeFile("LastData.json", JSON.stringify(LastDataJSON), function (err) {
     if (err) console.warn(err);
   });
 }
 
-function ArduinoWrite(data, init, type, LedName) {
+function ArduinoWrite(data, init = true, type = "general", LedName = "global", options = {}, isCMD = false) {
   if (data === undefined) return;
-  if (init === undefined) init = false; // Old code support!
-  if (type === undefined) type = "general"; // Old code support!
-  if (LedName === undefined) LedName = "global"; // Old code support!
   var tmp = 500;
   if (type == "RGB" || type == "Single") {
-    tmp = 50;
+    tmp = 80;
   }
 
   Queue[type].add(() => {
     return new Promise(async (resolve, reject) => {
-      if (!ArduinoPort.isOpen) {
+      if (!ArduinoPort.isOpen && !arduinoConfig.get().ExternClients) {
         tmp = 7500;
         ArduinoPort.open();
         console.log("Waiting 7,5 sec for reconnecting!");
@@ -103,77 +138,33 @@ function ArduinoWrite(data, init, type, LedName) {
       }
       if(!Queue.QueueToggle.pause) {
         await promiseWhen(function(){
-          return Queue.QueueToggle.pause == false;
-        }).then(() => {
-          Queue.QueueToggle.set(true);
-        });
-      }
+            return Queue.QueueToggle.pause == false;
+          }).then(() => {
+            Queue.QueueToggle.set(true);
+          });
+        }
         var queut = 0;
         
         queut = Queue["RGB"].waitingCount + Queue["Single"].waitingCount + Queue["IRRGB"].waitingCount;
         ws().emit("QueueCount", queut);
         ws().emit(type+"."+LedName+"Queue", Queue[type].waitingCount);
         setTimeout(() => {
-          if (init == false) {
-            LastData(data);
-          }
+          // createExtension.parallel('arduino/write', LastArduinoRes);
           ArduinoPort.write(data + "\n", (err) => {
             if (err) console.warn(err, 03);
+            if (!init) {
+              LastData(data, LedName, options);
+              ws().emit(type+"."+LedName, options.options.color.join(','));
+            }
             console.log("IR written:", data);
-            ws().emit(type+"."+LedName, data);
             ws().emit("response", data);
+            ws().of('/child').emit('write', data);
+            ws().of('/child/'+LedName).emit('write', data);
             resolve();
           });
         }, tmp);
     });
   });
-}
-
-async function Shortcuts(Shortcut) {
-  Shortcut = Shortcut.toLowerCase();
-  if (Shortcut == "lowest") {
-    await ArduinoWrite("bed bright down");
-    await ArduinoWrite("bed bright down");
-    await ArduinoWrite("bed bright down");
-    await ArduinoWrite("bed bright down");
-    await ArduinoWrite("bed bright down");
-    await ArduinoWrite("bed bright down");
-    await ArduinoWrite("bed bright down");
-    await ArduinoWrite("bed bright down");
-  } else if (Shortcut == "brightest") {
-    await ArduinoWrite("bed bright up");
-    await ArduinoWrite("bed bright up");
-    await ArduinoWrite("bed bright up");
-    await ArduinoWrite("bed bright up");
-    await ArduinoWrite("bed bright up");
-    await ArduinoWrite("bed bright up");
-    await ArduinoWrite("bed bright up");
-    await ArduinoWrite("bed bright up");
-  } else {
-    console.log("No Shortcut found!");
-  }
-}
-
-async function brightness(level, LED) {
-  var count;
-  if (level <= 3) {
-    count = 1;
-    await Shortcuts("lowest");
-
-    console.log("Level: ", level);
-    while (count <= level) {
-      count++;
-      await ArduinoWrite(LED + " bright up");
-    }
-  } else {
-    count = 5;
-    await Shortcuts("brightest");
-    console.log("Level: ", level);
-    while (level <= count) {
-      count = count - 1;
-      await ArduinoWrite(LED + " bed bright down");
-    }
-  }
 }
 
 async function ArduinoWriteAdvanced(cmd) {
@@ -195,9 +186,7 @@ async function ArduinoWriteAdvanced(cmd) {
 
 module.exports = {
   ArduinoPort,
-  brightness,
   Write: ArduinoWrite,
   WriteAdvanced: ArduinoWriteAdvanced,
-  Shortcuts,
   LastDataJSON  
 };

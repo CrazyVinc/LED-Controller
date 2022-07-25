@@ -1,7 +1,6 @@
 var express = require('express');
 var session = require('express-session');
 let ejs = require('ejs');
-var bodyParser = require('body-parser');
 var moment = require('moment');
 
 const SerialPort = require('serialport');
@@ -14,8 +13,11 @@ var CronVerify = require('cron-validate');
 const UUID = require('uuidv4');
 
 const Arduino = require("../ArduinoController");
+const { getCommand } = require('../ArduinoParser');
+
 const { models } = require("../Database");
 const CronJobs = require("../CronJobs");
+const { verify, randomUUID } = require('crypto');
 
 var config = require('../ConfigManager');
 
@@ -50,21 +52,30 @@ app.post('/event', async (req, res) => {
         }
     }
     
-    data.RunOn = data.Calendar || (data.Sec+" "+data.Min+" "+data.Hours+" "+data.DayOfMonth+" "+data.Months+" "+data.DayOfWeek);
+    data.RunOn = (data.Calendar || (data.Sec+" "+data.Min+" "+data.Hours+" "+data.DayOfMonth+" "+data.Months+" "+data.DayOfWeek));
 
     var ArduinoCMDs = [];
-    data.Enable = data.Enable.split(',');
-    data.Enable.forEach(Enabled => {
-        ArduinoCMDs.push(Enabled + " "+data[Enabled+"Value"]);
-    });
+    // data.LEDs = data.LEDs.split(',');
+    // console.log(data.LEDs)
+    data.LEDs = data.LEDs.filter(led => led !== 'dummy');
+    data.LEDNames = [];
+    data.LEDs.forEach(LED => {
+        LED = JSON.parse(LED);
+        data.LEDNames.push(LED.name);
 
+        var action = getCommand("LEDs."+LED.type, {
+            pin: [ 11, 10, 9 ], color: [ LED.value ]
+        });
+        ArduinoCMDs.push({command: action, color: LED.value, type: LED.type});
+    });
+    // console.log(ArduinoCMDs, 5747, data);
     await models.ledtimes_model.create({
-        Name: req.body.Naam,
+        Name: data.JobName,
         CronTime: data.RunOn,
         enabled: true,
-        cmd: ArduinoCMDs.join(","),
+        cmd: ArduinoCMDs,
         type: req.body.RunType.toString().toLowerCase(),
-        LedStrip: data.Enable.join(",")
+        LedStrip: data.LEDNames
     });
     setTimeout(() => {
         CronJobs.LED2Cron.fireOnTick();

@@ -11,7 +11,7 @@
                     Error:
                 </div>
                 <div class="column">
-                    <%- error.code %>
+                    <%- (error.code || error.message || error) %>
                 </div>
             </div>
         </div>
