@@ -36,6 +36,7 @@ app.get('/CronJob', function(req, res) {
 });
 
 app.post('/event', async (req, res) => {
+    //TODO Recode and document this POST
     var data = req.body;
     if(data.RunType == "Cron") {
         if(data.Sec.includes('*')) data.Sec = '*';
@@ -45,10 +46,10 @@ app.post('/event', async (req, res) => {
         if(data.Months.includes('*')) data.Months = '*';
         if(data.DayOfWeek.includes('*')) data.DayOfWeek = '*';
         if(data.DayOfMonth.toString().includes(",")) {
-            data.DayOfMonth = "["+data.DayOfMonth+"]";
+            data.DayOfMonth = data.DayOfMonth;
         }
         if(data.DayOfWeek.toString().includes(",")) {
-            data.DayOfWeek = "["+data.DayOfWeek+"]";
+            data.DayOfWeek = data.DayOfWeek;
         }
     }
     
@@ -56,7 +57,7 @@ app.post('/event', async (req, res) => {
 
     var ArduinoCMDs = [];
     // data.LEDs = data.LEDs.split(',');
-    // console.log(data.LEDs)
+    // console.log(data.LEDs, 573)
     data.LEDs = data.LEDs.filter(led => led !== 'dummy');
     data.LEDNames = [];
     data.LEDs.forEach(LED => {
